@@ -24,10 +24,6 @@
 
   --grad: linear-gradient(120deg, var(--blue-deep) 0%, var(--blue) 55%, var(--cyan) 100%);
 
-  /* Richer radial gradient reserved for the hero, where taxo.ai's own
-     navy-into-black vignette is most pronounced. */
-  --bg-hero: radial-gradient(130% 150% at 18% 0%, #14336a 0%, #081c3b 45%, #04070f 100%);
-
   --serif: "Instrument Serif", Georgia, serif;
   --sans: "Inter", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, monospace;
@@ -47,7 +43,7 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background: transparent;
   color: var(--text);
   font-family: var(--sans);
   font-size: 16.5px;
@@ -94,6 +90,68 @@ em { font-style: italic; }
 .skip-link:focus { top: 16px; }
 
 /* ---------------- Backdrop layers ---------------- */
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: -1;
+  display: block;
+  pointer-events: none;
+}
+
+/* Atmosphere: nebulae, volumetric light shafts and the cinematic
+   vignette, deliberately collapsed into ONE layer. Each full-screen
+   translucent layer over the animating canvas measured ~6-12fps here
+   (this sandbox composites on the CPU), so layer count matters far more
+   than what any single layer contains. Parallax is kept small enough
+   that the baked-in vignette never visibly shifts. */
+.atm {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -6vh;
+  height: 112vh;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+  background:
+    radial-gradient(ellipse 78% 64% at 50% 46%,
+      transparent 0%, rgba(0, 0, 0, .3) 62%, rgba(0, 0, 0, .78) 100%),
+    radial-gradient(closest-side circle at 17% 26%, rgba(40, 104, 255, .3), transparent 100%),
+    radial-gradient(closest-side circle at 86% 46%, rgba(18, 198, 236, .17), transparent 100%),
+    radial-gradient(closest-side circle at 52% 74%, rgba(104, 68, 255, .19), transparent 100%),
+    linear-gradient(104deg, transparent 12%, rgba(78, 148, 255, .09) 20%, transparent 29%),
+    linear-gradient(97deg, transparent 50%, rgba(56, 214, 255, .065) 56%, transparent 62%),
+    linear-gradient(112deg, transparent 74%, rgba(122, 108, 255, .055) 84%, transparent 93%);
+}
+
+/* Slow light sweep across the viewport — transform-only, so it rides the
+   compositor rather than forcing repaints. */
+.scanline {
+  position: fixed;
+  left: 0; right: 0; top: 0;
+  height: 22vh;
+  z-index: 59;
+  pointer-events: none;
+  opacity: .5;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(120, 200, 255, .028) 45%,
+    rgba(160, 220, 255, .05) 50%,
+    rgba(120, 200, 255, .028) 55%,
+    transparent 100%
+  );
+  animation: sweep 13s linear infinite;
+  will-change: transform;
+}
+@keyframes sweep {
+  0%   { transform: translate3d(0, -25vh, 0); }
+  100% { transform: translate3d(0, 125vh, 0); }
+}
+
 .grain {
   position: fixed;
   inset: 0;
@@ -222,10 +280,23 @@ em { font-style: italic; }
 .btn-ghost { border: 1px solid var(--line); color: var(--text); }
 .btn-ghost:hover { border-color: var(--line-2); background: var(--surface); transform: translateY(-2px); }
 .btn-primary {
+  position: relative;
+  overflow: hidden;
   background: var(--text);
   color: #05070e;
   font-weight: 600;
 }
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .75), transparent);
+  transform: translateX(0);
+  transition: transform .75s var(--ease);
+  pointer-events: none;
+}
+.btn-primary:hover::after { transform: translateX(340%); }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 40px -14px rgba(243, 241, 236, .5); }
 .btn-outline { border: 1px solid var(--line-2); color: var(--text); }
 .btn-outline:hover { border-color: var(--text-3); background: var(--surface); transform: translateY(-2px); }
@@ -292,25 +363,6 @@ em { font-style: italic; }
   align-items: center;
   padding: 138px 0 96px;
   overflow: hidden;
-  background: var(--bg-hero);
-}
-#network {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  opacity: .55;
-}
-.hero-glow {
-  position: absolute;
-  top: -25%; left: 46%;
-  transform: translateX(-50%);
-  width: min(1000px, 120vw);
-  aspect-ratio: 1;
-  background: radial-gradient(circle, rgba(79,141,255,.15), rgba(29,78,216,.07) 45%, transparent 70%);
-  z-index: 0;
-  pointer-events: none;
 }
 .hero-inner { position: relative; z-index: 2; }
 
@@ -471,10 +523,6 @@ em { font-style: italic; }
 .section {
   padding: clamp(84px, 11vw, 150px) 0;
   position: relative;
-  background-image:
-    radial-gradient(640px 420px at 88% -8%, rgba(91, 156, 255, .05), transparent 70%),
-    radial-gradient(560px 380px at -8% 105%, rgba(224, 183, 126, .035), transparent 70%);
-  background-repeat: no-repeat;
 }
 .section-tint {
   background-color: var(--bg-tint);
@@ -575,7 +623,9 @@ em { font-style: italic; }
   padding: 26px;
   background: var(--surface);
   overflow: hidden;
-  box-shadow: 0 28px 54px -30px rgba(0, 0, 0, .6);
+  box-shadow:
+    inset 0 1px 0 rgba(150, 214, 255, .16),
+    0 28px 54px -30px rgba(0, 0, 0, .65);
 }
 .pc-photo {
   display: block;
@@ -697,14 +747,19 @@ em { font-style: italic; }
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: clamp(56px, 7vw, 84px);
-  box-shadow: 0 28px 54px -30px rgba(0, 0, 0, .6);
+  box-shadow:
+    inset 0 1px 0 rgba(150, 214, 255, .16),
+    0 28px 54px -30px rgba(0, 0, 0, .65);
 }
 .fig {
-  background: var(--bg);
+  background: rgba(7, 12, 22, .58);
   padding: 32px 26px 30px;
-  transition: background .4s var(--ease);
+  transition: background .4s var(--ease), box-shadow .4s var(--ease);
 }
-.fig:hover { background: var(--surface); }
+.fig:hover {
+  background: rgba(18, 32, 58, .68);
+  box-shadow: inset 0 0 40px -14px rgba(90, 180, 255, .45);
+}
 .fig-num {
   font-family: var(--serif);
   font-size: clamp(38px, 4.6vw, 62px);
@@ -753,7 +808,9 @@ em { font-style: italic; }
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: clamp(56px, 7vw, 84px);
-  box-shadow: 0 28px 54px -30px rgba(0, 0, 0, .6);
+  box-shadow:
+    inset 0 1px 0 rgba(150, 214, 255, .16),
+    0 28px 54px -30px rgba(0, 0, 0, .65);
 }
 .link-card {
   position: relative;
@@ -761,10 +818,13 @@ em { font-style: italic; }
   flex-direction: column;
   gap: 10px;
   padding: 30px 26px 34px;
-  background: var(--bg);
-  transition: background .4s var(--ease);
+  background: rgba(7, 12, 22, .58);
+  transition: background .4s var(--ease), box-shadow .4s var(--ease);
 }
-.link-card:hover { background: var(--surface); }
+.link-card:hover {
+  background: rgba(18, 32, 58, .68);
+  box-shadow: inset 0 0 40px -14px rgba(90, 180, 255, .45);
+}
 .lc-label {
   font-size: 17px;
   font-weight: 550;
@@ -992,4 +1052,62 @@ em { font-style: italic; }
   .reveal { opacity: 1; transform: none; }
   .reveal-inner { transform: none; }
   .reveal-up { opacity: 1; transform: none; }
+}
+
+/* ---------------- Futuristic detailing ----------------
+   HUD-flavoured accents layered on the existing editorial system:
+   glowing figures, a lit section rail, and cyan-charged hover states. */
+.hstat-num,
+.fig-num {
+  text-shadow: 0 0 26px rgba(90, 170, 255, .35);
+}
+
+/* Section rail reads as an instrument readout. */
+.sec-rail { position: relative; }
+.sec-rail::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 12px;
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(var(--cyan), transparent);
+  opacity: .55;
+}
+.sec-num {
+  position: relative;
+  text-shadow: 0 0 16px rgba(224, 183, 126, .45);
+}
+
+/* Corner ticks on the timeline cards — not clipped by any rounded parent. */
+.tl-card { position: relative; }
+.tl-item:first-child .tl-card::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: -6px;
+  width: 9px;
+  height: 9px;
+  border-left: 1px solid rgba(96, 178, 255, .6);
+  border-top: 1px solid rgba(96, 178, 255, .6);
+}
+
+.cap-inline li:hover {
+  border-color: rgba(96, 178, 255, .5);
+  color: var(--text);
+  box-shadow: 0 0 18px -6px rgba(90, 170, 255, .6);
+}
+
+.contact-link:hover {
+  border-color: rgba(96, 178, 255, .45);
+  box-shadow: 0 0 26px -10px rgba(90, 170, 255, .7);
+}
+
+.link-card:hover .lc-go { color: var(--cyan); }
+
+.awards li:hover .aw-year { text-shadow: 0 0 14px rgba(224, 183, 126, .6); }
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline { display: none; }
+  .btn-primary::after { display: none; }
 }
