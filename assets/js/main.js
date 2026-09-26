@@ -6,6 +6,13 @@
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------------- Letterbox intro ---------------- */
+  const letterbox = document.querySelector(".letterbox");
+  if (letterbox) {
+    if (reduceMotion) letterbox.remove();
+    else letterbox.lastElementChild.addEventListener("animationend", () => letterbox.remove());
+  }
+
   /* ---------------- Year ---------------- */
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -14,18 +21,22 @@
   const cursorDot = document.getElementById("cursorDot");
   const cursorRing = document.getElementById("cursorRing");
   if (cursorDot && cursorRing && !reduceMotion && matchMedia("(hover: hover)").matches) {
-    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
-    window.addEventListener("mousemove", (e) => {
-      mouseX = e.clientX; mouseY = e.clientY;
-      cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
-    });
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0, ringRaf = null;
+    // The ring eases toward the pointer; once it has caught up, the loop
+    // parks itself instead of writing a transform every frame forever.
     function animateRing() {
       ringX += (mouseX - ringX) * 0.18;
       ringY += (mouseY - ringY) * 0.18;
       cursorRing.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%,-50%)`;
-      requestAnimationFrame(animateRing);
+      ringRaf = Math.abs(mouseX - ringX) + Math.abs(mouseY - ringY) > 0.3
+        ? requestAnimationFrame(animateRing)
+        : null;
     }
-    animateRing();
+    window.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
+      if (!ringRaf) ringRaf = requestAnimationFrame(animateRing);
+    }, { passive: true });
 
     document.querySelectorAll('[data-cursor="link"]').forEach((el) => {
       el.addEventListener("mouseenter", () => cursorRing.classList.add("active"));
@@ -34,6 +45,35 @@
   } else if (cursorDot && cursorRing) {
     cursorDot.style.display = "none";
     cursorRing.style.display = "none";
+  }
+
+  /* ---------------- 3D card tilt ---------------- */
+  // A pure-CSS-transform tilt driven by pointer position — no extra
+  // layers, no canvas, just a translateZ/rotate already on the compositor
+  // thread. Fine-pointer only: touch has no hover to drive it from, and
+  // the constant pointermove listener isn't worth paying for on mobile.
+  if (!reduceMotion && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.querySelectorAll(".tilt").forEach((card) => {
+      let raf = null;
+      function onMove(e) {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - 0.5;
+          const py = (e.clientY - r.top) / r.height - 0.5;
+          card.style.setProperty("--tilt-x", (-py * 7).toFixed(2) + "deg");
+          card.style.setProperty("--tilt-y", (px * 9).toFixed(2) + "deg");
+          card.style.setProperty("--glow-x", `${(px + 0.5) * 100}%`);
+          card.style.setProperty("--glow-y", `${(py + 0.5) * 100}%`);
+          raf = null;
+        });
+      }
+      card.addEventListener("mousemove", onMove);
+      card.addEventListener("mouseleave", () => {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+      });
+    });
   }
 
   /* ---------------- Scroll progress + nav state ---------------- */
@@ -45,7 +85,7 @@
     const scrollTop = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-    if (progressBar) progressBar.style.width = pct + "%";
+    if (progressBar) progressBar.style.transform = `scaleX(${pct / 100})`;
     if (nav) nav.classList.toggle("scrolled", scrollTop > 40);
     if (toTop) toTop.classList.toggle("visible", scrollTop > 600);
   }
@@ -157,8 +197,9 @@
   /* ---------------- Cinematic stage ----------------
      One fixed, full-page canvas composites every background layer: a
      scroll-reactive colour field, drifting nebulae, volumetric light
-     shafts, a perspective grid on the hero floor, a parallax star field
-     and the neural network — all in a single rAF loop.
+     shafts, a perspective grid on the hero floor and a parallax star
+     field — all in a single rAF loop. The hero's neural-network motif is
+     now a real 3D WebGL piece (see three-hero.js), not drawn here.
 
      Everything that can be pre-rendered is. A first pass that built its
      gradients inline each frame measured 22fps here: large-area
@@ -171,14 +212,16 @@
     const hero = document.getElementById("hero");
 
     let W = 0, H = 0, dpr = 1, heroH = 800, lastW = 0;
-    let stars = [], nodes = [];
+    let stars = [];
     let gridLayer = null;
     let fieldGrad = null, fieldKey = -1;
-    const pulses = [];
 
     const atm = document.querySelector(".atm");
-    const mouse = { x: null, y: null };
+    const heroInner = document.querySelector(".hero-inner");
+    let heroStyled = false;
+    let lastDriftY = -1;
     let t = 0;
+    let velocity = 0;
     let scrollY = window.scrollY;
     let target = scrollY;
 
@@ -238,33 +281,33 @@
         };
       });
 
-      nodes = Array.from({ length: Math.min(48, Math.round((W * Math.min(H, heroH)) / 26000)) }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * Math.min(H, heroH),
-        vx: (Math.random() - .5) * .3,
-        vy: (Math.random() - .5) * .3,
-        r: Math.random() * 1.5 + .55,
-      }));
-
       gridLayer = makeGridLayer();
     }
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 1.75);
-      W = window.innerWidth;
-      H = window.innerHeight;
+      const nextW = window.innerWidth;
+      const nextH = canvas.clientHeight || window.innerHeight;
+      const nextDpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      heroH = hero ? hero.offsetHeight : nextH;
+      // The canvas is 100lvh, so a mobile toolbar collapsing doesn't change
+      // its size at all — nothing to reallocate or rebuild.
+      if (nextW === W && nextH === H && nextDpr === dpr) return;
+      dpr = nextDpr;
+      W = nextW;
+      H = nextH;
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      heroH = hero ? hero.offsetHeight : H;
       fieldGrad = null;
-      // Width-only guard: mobile browsers fire resize on toolbar collapse.
       if (stars.length && Math.abs(W - lastW) < 40) {
         gridLayer = makeGridLayer();
-        return;
+      } else {
+        lastW = W;
+        build();
       }
-      lastW = W;
-      build();
+      // Resetting canvas.width wipes it; with reduced motion there is no
+      // rAF loop to repaint, so the backdrop used to go blank on resize.
+      if (reduceMotion) frame();
     }
 
     /* Colour field — the "camera" travels into a colder, darker register
@@ -303,82 +346,71 @@
       }
     }
 
+    /* Stars stretch into warp streaks in proportion to scroll speed and
+       depth — near stars streak more — then relax back to points. Lines
+       are no dearer to draw than the arcs they replace. */
     function drawStars() {
+      const warp = Math.max(-70, Math.min(70, velocity));
+      const streaking = Math.abs(warp) > 1.2;
       for (const s of stars) {
         s.x += .012 * s.depth;
         if (s.x > W + 4) s.x = -4;
         const py = wrap(s.y - scrollY * s.depth * .38, H + 60) - 30;
         const tw = s.a + Math.sin(t * s.tw + s.ph) * .26;
         if (tw <= 0) continue;
-        ctx.beginPath();
-        ctx.arc(s.x, py, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(214,232,255,${tw})`;
-        ctx.fill();
+        if (streaking) {
+          const len = warp * s.depth * .55;
+          ctx.strokeStyle = `rgba(214,232,255,${Math.min(1, tw * 1.1)})`;
+          ctx.lineWidth = s.r * 1.4;
+          ctx.beginPath();
+          ctx.moveTo(s.x, py);
+          ctx.lineTo(s.x, py + len);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(s.x, py, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(214,232,255,${tw})`;
+          ctx.fill();
+        }
       }
     }
 
-    /* Neural network, anchored to the hero and faded out past it. */
-    function drawNetwork(fade) {
-      const linkDist = Math.min(150, W * .14);
-      const lim = Math.min(H, heroH);
-
-      for (const n of nodes) {
-        n.x += n.vx;
-        n.y += n.vy;
-        if (n.x < 0 || n.x > W) n.vx *= -1;
-        if (n.y < 0 || n.y > lim) n.vy *= -1;
-        if (mouse.x !== null) {
-          const dx = mouse.x - n.x, dy = mouse.y - n.y;
-          if (dx * dx + dy * dy < 19600) { n.x -= dx * .0022; n.y -= dy * .0022; }
+    /* The hero pulls away as you scroll: its copy drifts at 0.84x scroll
+       speed and fades, like a camera tracking back. Driven by the real
+       scroll position (not the smoothed one) so text never wobbles, and
+       styles are cleared at rest so no layer stays promoted.
+       Tuned so the copy has fully faded before the drift carries it into
+       the hero's bottom edge (overflow: hidden would otherwise slice a
+       hard line through the stats). Desktop only: on phones the hero is a
+       tall block of text people read while scrolling, so fading it early
+       would hurt, and there's no sphere there to pull toward anyway. */
+    const driftOK = matchMedia("(min-width: 901px)").matches;
+    function driftHero() {
+      if (!heroInner || reduceMotion || !driftOK) return;
+      const y = target;
+      if (y <= 1 || y > heroH) {
+        if (heroStyled && y <= 1) {
+          heroInner.style.transform = "";
+          heroInner.style.opacity = "";
+          heroStyled = false;
+          lastDriftY = -1;
         }
+        return;
       }
-
-      const links = [];
-      ctx.lineWidth = .6;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j];
-          const dx = a.x - b.x, dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < linkDist) {
-            ctx.strokeStyle = `rgba(128,168,255,${(1 - dist / linkDist) * .3 * fade})`;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-            links.push(a, b);
-          }
-        }
-      }
-
-      if (Math.random() < .05 && links.length) {
-        const k = ((Math.random() * links.length / 2) | 0) * 2;
-        pulses.push({ a: links[k], b: links[k + 1], t: 0, sp: .012 + Math.random() * .014 });
-      }
-      for (let i = pulses.length - 1; i >= 0; i--) {
-        const p = pulses[i];
-        p.t += p.sp;
-        if (p.t >= 1) { pulses.splice(i, 1); continue; }
-        const px = p.a.x + (p.b.x - p.a.x) * p.t;
-        const py = p.a.y + (p.b.y - p.a.y) * p.t;
-        const f = Math.sin(p.t * Math.PI) * fade;
-        ctx.beginPath();
-        ctx.arc(px, py, 2.2 * f + .6, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(140,220,255,${.9 * f})`;
-        ctx.fill();
-      }
-
-      for (const n of nodes) {
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(178,206,255,${.85 * fade})`;
-        ctx.fill();
-      }
+      if (y === lastDriftY) return;
+      lastDriftY = y;
+      const p = y / heroH;
+      heroInner.style.transform = `translate3d(0, ${(y * .16).toFixed(1)}px, 0)`;
+      heroInner.style.opacity = Math.max(0, 1 - p * 1.7).toFixed(3);
+      heroStyled = true;
     }
 
     function frame() {
       t += 1;
+      const prev = scrollY;
       scrollY += (target - scrollY) * .08;
+      velocity = scrollY - prev;
+      driftHero();
       const doc = document.documentElement.scrollHeight - H;
       const progress = doc > 0 ? Math.min(1, scrollY / doc) : 0;
       const heroFade = Math.max(0, 1 - scrollY / (heroH * .85));
@@ -392,7 +424,6 @@
       }
       if (heroFade > .01) drawGrid(heroFade);
       drawStars();
-      if (heroFade > .01) drawNetwork(heroFade);
 
       if (!reduceMotion) requestAnimationFrame(frame);
     }
@@ -402,9 +433,6 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(resize, 150);
     });
-    window.addEventListener("mousemove", (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
-    window.addEventListener("mouseleave", () => { mouse.x = null; mouse.y = null; });
-
     resize();
     frame();
   })();

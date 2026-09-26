@@ -94,12 +94,38 @@ em { font-style: italic; }
   position: fixed;
   inset: 0;
   width: 100vw;
+  /* lvh, not dvh: the backdrop should always cover the largest viewport,
+     so a mobile toolbar collapsing mid-scroll never stretches the canvas
+     or forces main.js to reallocate its backing store. */
   height: 100vh;
-  height: 100dvh;
+  height: 100lvh;
   z-index: -1;
   display: block;
   pointer-events: none;
 }
+
+/* Cinematic opening: letterbox bars that retract as the page loads. Pure
+   CSS so it plays without JS too; main.js removes the node once done so
+   it doesn't linger as a composited layer. */
+.letterbox { position: fixed; inset: 0; z-index: 120; pointer-events: none; }
+.letterbox i {
+  position: absolute;
+  left: 0; right: 0;
+  height: 12vh;
+  background: #02040a;
+}
+.letterbox i:first-child {
+  top: 0;
+  box-shadow: 0 1px 0 rgba(96, 178, 255, .3);
+  animation: lbTop 1.3s var(--ease) .3s forwards;
+}
+.letterbox i:last-child {
+  bottom: 0;
+  box-shadow: 0 -1px 0 rgba(96, 178, 255, .3);
+  animation: lbBot 1.3s var(--ease) .3s forwards;
+}
+@keyframes lbTop { to { transform: translateY(-102%); } }
+@keyframes lbBot { to { transform: translateY(102%); } }
 
 /* Atmosphere: nebulae, volumetric light shafts and the cinematic
    vignette, deliberately collapsed into ONE layer. Each full-screen
@@ -195,10 +221,11 @@ em { font-style: italic; }
   position: fixed;
   top: 0; left: 0;
   height: 2px;
-  width: 0%;
+  width: 100%;
   background: var(--grad);
   z-index: 100;
-  transition: width .1s linear;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
 }
 
 /* ---------------- Nav ---------------- */
@@ -207,15 +234,16 @@ em { font-style: italic; }
   top: 0; left: 0; right: 0;
   z-index: 50;
   padding: 22px 0;
-  background: rgba(7, 12, 22, 0.7);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  /* No backdrop-filter: over the always-animating stage it measured ~7fps
+     idle and ~12fps while scrolling, for a blur that is barely visible
+     through a bar this opaque. A denser fill gives the same read. */
+  background: rgba(7, 12, 22, 0.82);
   border-bottom: 1px solid transparent;
   transition: padding .35s var(--ease), box-shadow .35s var(--ease), border-color .35s var(--ease), background .35s var(--ease);
 }
 .nav.scrolled {
   padding: 13px 0;
-  background: rgba(7, 12, 22, 0.86);
+  background: rgba(7, 12, 22, 0.93);
   border-bottom-color: var(--line);
   box-shadow: 0 16px 34px -26px rgba(0, 0, 0, .5);
 }
@@ -357,14 +385,45 @@ em { font-style: italic; }
 /* ---------------- Hero ---------------- */
 .hero {
   position: relative;
+  /* svh, not dvh: dvh grows as a mobile toolbar collapses, which resized
+     the hero mid-scroll and shifted every section below it. */
   min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   align-items: center;
-  padding: 138px 0 96px;
+  /* Height-aware so the whole hero, stats included, fits common laptop
+     viewports (1280x800, 1440x900) instead of cutting the stats row. */
+  padding: clamp(96px, 13vh, 138px) 0 clamp(48px, 9vh, 96px);
   overflow: hidden;
 }
-.hero-inner { position: relative; z-index: 2; }
+/* width:100% matters: as a flex item the container otherwise shrink-wraps
+   and centres itself, so the hero text didn't line up with the nav, the
+   stats row was squeezed, and the text drifted under the 3D sphere. */
+.hero-inner { position: relative; z-index: 2; width: 100%; }
+#hero3d {
+  /* Sized to the sphere's own footprint, not the full hero — every extra
+     pixel here is a transparent pixel the compositor still has to blend
+     against the animating 2D stage underneath every frame. Measured: at
+     full-hero size this cost ~24fps on top of an otherwise-free WebGL
+     draw; shrinking the element itself (not just what's drawn on it) is
+     what recovers that, the same lesson as the earlier atmosphere layers. */
+  position: absolute;
+  top: 50%;
+  right: max(-9vw, calc((100vw - var(--container)) / 2 - 40px));
+  width: clamp(420px, 46vw, 700px);
+  aspect-ratio: 1;
+  /* Individual `translate` for centring leaves `scale` free for the
+     scroll dolly in three-hero.js. */
+  translate: 0 -50%;
+  z-index: 1;
+  pointer-events: none;
+}
+@media (max-width: 900px), (pointer: coarse) {
+  /* The data-sphere is a hero flourish, not core content — skip the
+     WebGL cost on phones/tablets where it competes hardest for battery
+     and thermal budget, and where the parallax tilt has no mouse anyway. */
+  #hero3d { display: none; }
+}
 
 .eyebrow {
   display: inline-flex;
@@ -375,7 +434,7 @@ em { font-style: italic; }
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--text-3);
-  margin-bottom: 30px;
+  margin-bottom: clamp(18px, 3vh, 30px);
 }
 .dot-pulse {
   width: 6px; height: 6px;
@@ -393,10 +452,10 @@ em { font-style: italic; }
 .hero-title {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(58px, 11vw, 150px);
+  font-size: clamp(58px, min(11vw, 14.5vh), 150px);
   line-height: .88;
   letter-spacing: -.025em;
-  margin-bottom: 30px;
+  margin-bottom: clamp(16px, 3vh, 30px);
 }
 .hero-title em {
   font-style: italic;
@@ -411,7 +470,7 @@ em { font-style: italic; }
 .reveal-line:nth-child(2) .reveal-inner { animation-delay: .26s; }
 @keyframes lineUp { to { transform: translateY(0); } }
 
-.hero-meta { margin-bottom: 24px; }
+.hero-meta { margin-bottom: clamp(16px, 2.6vh, 24px); }
 .hero-role {
   font-size: clamp(17px, 2vw, 21px);
   font-weight: 500;
@@ -435,18 +494,18 @@ em { font-style: italic; }
   max-width: 56ch;
   font-size: 17px;
   color: var(--text-2);
-  margin-bottom: 34px;
+  margin-bottom: clamp(22px, 3.6vh, 34px);
 }
 .hero-lede strong { color: var(--text); font-weight: 550; }
 
-.hero-cta { display: flex; gap: 14px; margin-bottom: 54px; flex-wrap: wrap; }
+.hero-cta { display: flex; gap: 14px; margin-bottom: clamp(30px, 5vh, 54px); flex-wrap: wrap; }
 
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   max-width: 880px;
   border-top: 1px solid var(--line);
-  padding-top: 26px;
+  padding-top: clamp(18px, 2.6vh, 26px);
   gap: 24px;
 }
 .hstat { display: flex; flex-direction: column; gap: 8px; }
@@ -581,12 +640,20 @@ em { font-style: italic; }
   margin-bottom: 8px;
 }
 
-.reveal {
+/* Scoped to .js (set inline in <head>) so the page is fully readable with
+   JavaScript off — unscoped, every section stayed at opacity 0. */
+.js .reveal {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity .85s var(--ease), transform .85s var(--ease);
+  transform: perspective(1400px) translateY(28px) translateZ(-60px) rotateX(6deg);
+  transition: opacity .9s var(--ease), transform .9s var(--ease);
 }
-.reveal.is-visible { opacity: 1; transform: none; }
+.js .reveal.is-visible {
+  /* Resting state is a literal `none`, not an at-rest 3D transform, so
+     ~20 reveal targets across the page don't sit on the compositor as
+     permanently promoted layers once their one-time entrance is done. */
+  opacity: 1;
+  transform: none;
+}
 
 /* ---------------- About ---------------- */
 .about-layout {
@@ -617,7 +684,34 @@ em { font-style: italic; }
   max-width: 44ch;
 }
 
+/* 3D pointer tilt — main.js sets --tilt-x/--tilt-y/--glow-x/--glow-y per
+   frame on mousemove; a bare `perspective()+rotate()` transform and a
+   radial-gradient masked by ::before are both compositor-cheap (no new
+   canvas, no extra full-size layer), unlike the layered backgrounds
+   found expensive elsewhere in this build. */
+.tilt {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  transform: perspective(1000px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform .4s var(--ease);
+  will-change: transform;
+}
+.tilt::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  background: radial-gradient(320px circle at var(--glow-x) var(--glow-y), rgba(120, 190, 255, .12), transparent 65%);
+  transition: opacity .3s var(--ease);
+  pointer-events: none;
+}
+.tilt:hover::before { opacity: 1; }
+
 .profile-card {
+  position: relative;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 26px;
@@ -627,6 +721,7 @@ em { font-style: italic; }
     inset 0 1px 0 rgba(150, 214, 255, .16),
     0 28px 54px -30px rgba(0, 0, 0, .65);
 }
+.profile-card picture { display: contents; }
 .pc-photo {
   display: block;
   width: calc(100% + 52px);
@@ -1007,7 +1102,8 @@ em { font-style: italic; }
   .nav-toggle { display: flex; }
   .sec-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .sec-rail {
-    position: static;
+    position: relative;
+    top: auto;
     flex-direction: row;
     align-items: center;
     gap: 12px;
@@ -1049,9 +1145,10 @@ em { font-style: italic; }
     transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
-  .reveal { opacity: 1; transform: none; }
+  .js .reveal { opacity: 1; transform: none; }
   .reveal-inner { transform: none; }
   .reveal-up { opacity: 1; transform: none; }
+  .letterbox { display: none; }
 }
 
 /* ---------------- Futuristic detailing ----------------
@@ -1062,8 +1159,9 @@ em { font-style: italic; }
   text-shadow: 0 0 26px rgba(90, 170, 255, .35);
 }
 
-/* Section rail reads as an instrument readout. */
-.sec-rail { position: relative; }
+/* Section rail reads as an instrument readout. (No `position` override
+   here: sticky is already positioned, and a `relative` set here used to
+   combine with sticky's `top: 118px` to push the rail 118px down.) */
 .sec-rail::before {
   content: "";
   position: absolute;
@@ -1110,4 +1208,34 @@ em { font-style: italic; }
 @media (prefers-reduced-motion: reduce) {
   .scanline { display: none; }
   .btn-primary::after { display: none; }
+}
+
+/* ---------------- Cinematic polish ---------------- */
+
+/* A light sweep across each section title's italic phrase as it enters —
+   one-shot, and only when JS is running (it's keyed off .is-visible). */
+.js .sec-title em {
+  background: linear-gradient(100deg, var(--text-2) 40%, #ffffff 50%, var(--text-2) 60%);
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* room for the italic overhang, which background-clip would crop */
+  padding-right: .08em;
+  margin-right: -.08em;
+}
+.js .sec-title.is-visible em {
+  /* ease-in-out, not the site's front-loaded --ease, which let the
+     highlight cross in ~0.3s — too fast to register. */
+  animation: titleSweep 1.7s ease-in-out .3s both;
+}
+@keyframes titleSweep {
+  from { background-position: 100% 0; }
+  to   { background-position: 0 0; }
+}
+
+@media (max-width: 900px) {
+  /* The rail is a single row here — keep its accent line level with it. */
+  .sec-rail::before { top: 50%; height: 16px; margin-top: -8px; }
 }
