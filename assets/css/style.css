@@ -464,7 +464,9 @@ em { font-style: italic; }
   background-clip: text;
   color: transparent;
 }
-.reveal-line { display: block; overflow: hidden; padding-bottom: .06em; }
+/* padding-bottom big enough to clear the italic serif's descenders (the
+   "y" in Oentaryo) before the reveal mask clips anything below the line. */
+.reveal-line { display: block; overflow: hidden; padding-bottom: .22em; }
 .reveal-inner { display: inline-block; transform: translateY(110%); animation: lineUp 1s var(--ease) forwards; }
 .reveal-line:nth-child(1) .reveal-inner { animation-delay: .12s; }
 .reveal-line:nth-child(2) .reveal-inner { animation-delay: .26s; }
