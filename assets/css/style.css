@@ -108,25 +108,19 @@ a:hover { text-decoration-color: currentColor; }
   font-size: clamp(2.6rem, 1.4rem + 4.6vw, 6rem);
   line-height: 0.98; letter-spacing: -0.025em; text-wrap: balance;
 }
-.h-lg em, .hero__name em, .intertitle__line em, .contact__title em, .scale__line em { font-style: italic; color: var(--accent); }
+.h-lg em, .hero__name em, .intertitle__line em, .contact__title em, .scale__line em { font-style: italic; }
 .lead {
   font-family: var(--font-display);
   font-size: clamp(1.45rem, 1.15rem + 1.2vw, 2.1rem);
   line-height: 1.22; letter-spacing: -0.01em; max-width: 34ch;
 }
 
-/* chapter numeral: the page numbers itself like a printed monograph */
-.h-lg[data-ch]::before {
-  content: "Chapter " attr(data-ch); display: block; margin-bottom: var(--s4);
-  font-family: var(--font-text); font-size: var(--t-xs); font-weight: 500; line-height: 1;
-  letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-soft);
-}
 /* running head, as at the top of a book page; names the chapter on screen */
 .runhead {
   position: fixed; z-index: 55; top: 0; left: 0; right: 0; margin: 0;
   display: flex; justify-content: space-between; gap: var(--s4);
   padding: 0.85rem var(--pad) 0.7rem;
-  font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-soft);
+  font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--ink-soft);
   background: linear-gradient(var(--canvas), transparent);
   opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-out);
 }
@@ -135,7 +129,7 @@ a:hover { text-decoration-color: currentColor; }
 .runhead span:first-child { color: var(--ink); }
 .lead + p::first-letter {
   float: left; margin: 0.06em 0.1em -0.1em 0; padding: 0;
-  font-family: var(--font-display); font-size: 3.9em; line-height: 0.78; color: var(--accent);
+  font-family: var(--font-display); font-size: 3.9em; line-height: 0.78; color: var(--ink);
 }
 
 /* ------------------------------------------------- scroll-driven pieces -- */
@@ -169,7 +163,7 @@ a:hover { text-decoration-color: currentColor; }
 @keyframes line-up { to { transform: none; } }
 
 .hero__rule { height: 0; border: 0; border-top: var(--rule); margin: 0 0 var(--s5); width: min(100%, 50%); }
-.hero__role { margin: 0; font-size: var(--t-xs); font-weight: 500; letter-spacing: var(--track-wide); text-transform: uppercase; }
+.hero__role { margin: 0; font-size: var(--t-sm); font-weight: 500; letter-spacing: 0.01em; }
 .hero__sub {
   margin: var(--s3) 0 var(--s5); max-width: 30ch;
   font-family: var(--font-display); font-size: clamp(1.4rem, 1.1rem + 1.1vw, 2rem);
@@ -249,13 +243,13 @@ a:hover { text-decoration-color: currentColor; }
 }
 @keyframes scan { 0% { background-position: 0 -30%; opacity: 0; } 10% { opacity: 1; } 60% { background-position: 0 130%; opacity: 0; } 100% { background-position: 0 130%; opacity: 0; } }
 .portrait img { width: 100%; height: auto; aspect-ratio: 760 / 884; object-fit: cover; transform: scale(1.14); }
-.portrait figcaption { margin-top: var(--s3); font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-soft); }
+.portrait figcaption { margin-top: var(--s3); font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--ink-soft); }
 .about__copy { max-width: 40rem; padding-top: clamp(0rem, 4vw, 3rem); }
 .about__copy > p:not(.lead) { max-width: 58ch; }
 .about__copy > .lead { margin-top: var(--s6); }
 .pull {
   margin: var(--s8) 0 0; padding: var(--s5) 0 0; max-width: 30ch;
-  border-top: var(--rule); color: var(--accent);
+  border-top: var(--rule); color: var(--ink);
   font-family: var(--font-display); font-style: italic;
   font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.3rem); line-height: 1.18; letter-spacing: -0.01em; text-wrap: balance;
 }
@@ -283,7 +277,7 @@ a:hover { text-decoration-color: currentColor; }
 .station--now .station__kind { color: var(--ink); }
 .station__kind span {
   margin-left: 0.6em; vertical-align: middle; color: var(--ink);
-  font-family: var(--font-text); font-style: normal; font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase;
+  font-family: var(--font-text); font-style: normal; font-size: var(--t-xs); letter-spacing: 0.01em;
 }
 .station h3 { margin: var(--s5) 0 0; font-size: var(--t-xl); font-weight: 500; letter-spacing: -0.015em; line-height: 1.2; }
 .station__meta { margin: var(--s1) 0 var(--s3); font-size: var(--t-sm); color: var(--ink-soft); }
@@ -313,7 +307,7 @@ a:hover { text-decoration-color: currentColor; }
 .reveal .scale__line { position: absolute; inset: 0 auto auto 0; opacity: 0; will-change: opacity, transform; }
 .scale__count { margin: 0; display: flex; flex-direction: column; gap: var(--s1); }
 .scale__num { font-family: var(--font-display); font-size: clamp(5rem, 2rem + 11vw, 13rem); line-height: 0.82; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
-.scale__unit { padding-top: var(--s3); font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-soft); }
+.scale__unit { padding-top: var(--s3); font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--ink-soft); }
 .scale__canvas { width: 100%; height: 100%; min-height: 0; }
 
 /* ----------------------------------------------------------- recognition -- */
@@ -360,7 +354,7 @@ a:hover { text-decoration-color: currentColor; }
 .craft__head { display: grid; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; }
 .craft__orbit { display: block; width: 100%; height: clamp(190px, 32vh, 300px); }
 @media (min-width: 861px) { .craft__head { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
-.craft__lang { margin: 0; font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-soft); }
+.craft__lang { margin: 0; font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--ink-soft); }
 .index { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(2rem, 7vw, 8rem); align-items: start; }
 .index__tabs { display: none; border-top: var(--rule); }
 .reveal .index__tabs { display: block; }
@@ -380,7 +374,7 @@ a:hover { text-decoration-color: currentColor; }
 .index__panels [role="tabpanel"]:not([hidden]) { animation: panel-in 420ms var(--ease-out); }
 @keyframes panel-in { from { opacity: 0; transform: translateY(10px); } }
 .index__panels li { padding: var(--s4) 0; border-bottom: var(--rule); font-size: var(--t-lg); letter-spacing: -0.01em; line-height: 1.25; }
-.index__panels small { margin-left: 0.6em; font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--accent); }
+.index__panels small { margin-left: 0.6em; font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--accent); }
 .index__panels .inline { display: flex; flex-wrap: wrap; gap: var(--s2); border-top: 0; }
 .index__panels .inline li { padding: 0.45em 1em; border: var(--rule); border-radius: var(--r-pill); font-size: var(--t-sm); }
 /* without JS the tabs stay hidden and every panel simply stacks */
@@ -409,7 +403,7 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 .colophon {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s2) var(--s6);
   margin-top: clamp(4rem, 14vh, 9rem); padding-top: var(--s4); border-top: var(--rule);
-  font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink);
+  font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--ink);
 }
 .colophon a { display: inline-flex; align-items: center; min-height: 2.75rem; text-decoration: none; color: var(--ink); }
 .colophon a:hover { color: var(--accent); }
@@ -422,7 +416,7 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 }
 .folio.on { opacity: 1; pointer-events: auto; }
 .folio ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
-.folio a { display: flex; align-items: center; gap: 0.7rem; padding: 0.35rem 0.5rem 0.35rem 0; font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase; text-decoration: none; }
+.folio a { display: flex; align-items: center; gap: 0.7rem; padding: 0.35rem 0.5rem 0.35rem 0; font-size: var(--t-xs); letter-spacing: 0.01em; text-decoration: none; }
 .folio i { display: block; width: 1rem; height: 1px; background: currentColor; opacity: 0.45; transform-origin: 0 50%; transition: transform 280ms var(--ease-out), opacity 200ms var(--ease-out); }
 .folio span { opacity: 0; transform: translateX(-6px); white-space: nowrap; font-weight: 500; transition: opacity 240ms var(--ease-out), transform 280ms var(--ease-out); }
 .folio b { margin-right: 0.5em; font-weight: 500; opacity: 0.65; }
