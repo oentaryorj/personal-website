@@ -256,7 +256,7 @@ a:hover { text-decoration-color: currentColor; }
 .station--lead { flex-basis: clamp(20rem, 38vw, 40rem); justify-content: center; }
 .station--end { flex-basis: clamp(1rem, 8vw, 8rem); }
 .station:not(.station--lead, .station--end) {
-  align-self: flex-start; margin-top: clamp(4.5rem, 20vh, 9rem); height: auto; justify-content: flex-start;
+  align-self: flex-start; margin-top: clamp(3.5rem, 9vh, 9rem); height: auto; justify-content: flex-start;
   padding-block: var(--s5); border-top: var(--rule);
 }
 .station__kind {
@@ -434,7 +434,6 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 
   .station { flex-basis: min(78vw, 20rem); }
   .station--lead { flex-basis: min(86vw, 24rem); }
-  .station--low:not(.station--lead), .station:not(.station--lead, .station--end, .station--low) { transform: none; }
 
   .folio { display: none; }
   .hero__name { font-size: clamp(3.4rem, min(25vw, 26svh), 9rem); }
@@ -453,6 +452,16 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
   .station--lead .h-lg { font-size: clamp(2rem, 8vh, 3.6rem); }
   .path { margin-top: var(--s5); }
   .path > div { padding-block: var(--s2); }
+}
+
+/* very narrow screens (folded phones): the career cards are too tall to pin, so they stack */
+@media (max-width: 340px) {
+  .career { height: auto; padding-block: clamp(3rem, 8vw, 5rem); }
+  .career .stage { position: static; height: auto; overflow: visible; }
+  .rail { display: block; height: auto; will-change: auto; }
+  .station, .station--lead, .station--end { flex: none; }
+  .station:not(.station--lead, .station--end) { margin-top: var(--s7); }
+  .station--end, .route { display: none; }
 }
 
 /* short screens (landscape phones, small windows): there is no room to pin the career
