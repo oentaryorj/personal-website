@@ -5,8 +5,7 @@
    large ticked gate at its heart: a hologram Earth inside it (the continents as
    glowing dots from baked Natural Earth data, a pillar of light and a spreading
    ring on each of the five markets) and three tilted orbit rings. Around it sit
-   the instruments: a row of gauges, leader lines, a radar, a live trace and a
-   bank of meters, framed by console lips and edge rulers.
+   the instruments: a row of gauges, leader lines, a radar, framed by console lips and edge rulers.
 
    Scrolling flies you through the gate: the cockpit swells past the screen and
    a ribbed corridor of lit panels opens beyond it. The rest of the page travels
@@ -208,30 +207,6 @@
       return c;
     }
 
-    vec3 scope(vec2 q, float w, float h, float t){
-      float xs = q.x / w;
-      if (xs < 0.0 || xs > 1.0 || abs(q.y) > h * 2.2) return vec3(0.0);
-      float aa = 1.5 / uRes.y;
-      float ph = fract(xs * 2.4 - t * 0.35) - 0.5;
-      float y = h * (0.10 * sin(xs * 46.0 - t * 2.0) + 7.0 * ph * exp(-ph * ph * 150.0));
-      float dist = abs(q.y - y);
-      float env = smoothstep(0.0, 0.12, xs) * smoothstep(1.0, 0.88, xs);
-      vec3 c = cy * (smoothstep(aa * 1.6, 0.0, dist) * 0.95 + exp(-dist * 190.0) * 0.18) * env;
-      c += cy * smoothstep(aa, 0.0, abs(q.y)) * 0.18 * env;
-      return c;
-    }
-
-    vec3 meters(vec2 q, float w, float h, float t){
-      float n = 10.0;
-      float xi = q.x / w * n;
-      float id = floor(xi);
-      if (id < 0.0 || id >= n || q.y < 0.0 || q.y > h) return vec3(0.0);
-      float hh = (0.25 + 0.75 * (0.5 + 0.5 * sin(t * (0.8 + 0.11 * id) + id * 2.3))) * h;
-      float inx = smoothstep(0.38, 0.32, abs(fract(xi) - 0.5));
-      float cells = step(0.30, fract(q.y / h * 12.0));
-      return cy * inx * step(q.y, hh) * (0.10 + 0.48 * cells);
-    }
-
     vec3 cockpit(vec2 p, vec2 gc, float R, float t, float lift, float port, float asp){
       float aa = 1.5 / uRes.y;
       vec3 c = gateArt(p - gc, R, t, lift, aa);
@@ -265,11 +240,9 @@
         lead += cy * smoothstep(aa * 1.3, 0.0, min(lA, lB)) * 0.5;
         c += lead * ins;
 
-        // the console below the gate: a radar, a trace, a bank of meters
+        // the console below the gate: one radar
         vec2 rc = vec2(gc.x - R * 0.60, 0.150 * k + 0.012);
         c += radar(p - rc, 0.085 * k, t) * ins;
-        c += scope(p - vec2(rc.x + 0.115 * k, rc.y + 0.020 * k), R * 0.96, 0.030 * k, t) * ins;
-        c += meters(p - vec2(rc.x + 0.115 * k, rc.y - 0.080 * k), R * 0.96, 0.052 * k, t) * ins;
       }
       return c;
     }
