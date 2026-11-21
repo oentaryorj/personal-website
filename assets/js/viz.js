@@ -156,7 +156,7 @@
           ctx.fillStyle = hot ? `rgba(${IC},${0.55 + 0.4 * Math.sin(t * 2 + k + i)})` : `rgba(${AC},0.5)`;
           ctx.beginPath(); ctx.arc(q.x, q.y, hot ? 2.3 : 1.8, 0, 6.2832); ctx.fill();
         });
-        if (i === on) glow(ctx, c.hub.x, c.hub.y, cr * 1.5, AC, 0.22);
+        if (i === on) glow(ctx, c.hub.x, c.hub.y, Math.min(cr * 1.5, c.hub.y, h - c.hub.y), AC, 0.22);   // never wider than the canvas, so it is not cut off
         ctx.strokeStyle = `rgba(${IC},${hot ? 0.95 : 0.5})`; ctx.lineWidth = hot ? 1.6 : 1;
         ctx.beginPath(); ctx.arc(c.hub.x, c.hub.y, 11, 0, 6.2832); ctx.stroke(); ctx.lineWidth = 1;
         ctx.fillStyle = hot ? `rgb(${IC})` : `rgba(${IC},0.6)`;

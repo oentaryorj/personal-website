@@ -348,12 +348,17 @@
 
   // Full rate while the page is moving or the scene is the star (title, interlude, close);
   // about 30fps when it is only breathing behind reading text.
-  let slow = 0, fast = 0, scrollAt = -1e9;
+  const IDLE_SLOW = 20000, IDLE_STOP = 120000;
+  let slow = 0, fast = 0, scrollAt = -1e9, activeAt = 0;
   const frame = (now) => {
     raf = 0;
     if (!visible) return;
-    const busy = now - scrollAt < 250 || energy > 0.6 || Math.abs(tx - mx) + Math.abs(ty - my) > 0.002;
-    if (!busy && now - last < 32) { raf = requestAnimationFrame(frame); return; }
+    // Nobody is interacting: ease off, then stop. A page left open for hours must not keep the GPU busy.
+    const idle = now - activeAt;
+    if (idle > IDLE_STOP) return;                                   // paused; any scroll, touch or key wakes it
+    const resting = idle > IDLE_SLOW;
+    const busy = !resting && (now - scrollAt < 250 || energy > 0.6 || Math.abs(tx - mx) + Math.abs(ty - my) > 0.002);
+    if (!busy && now - last < (resting ? 83 : 32)) { raf = requestAnimationFrame(frame); return; }
     const dt = Math.min(now - last, 100);
     last = now;
     if (zoneDirty) pickZone();
@@ -373,16 +378,38 @@
 
   const wake = () => {
     if (reduce) { drawStill(); return; }
-    if (!raf && visible) { last = performance.now(); raf = requestAnimationFrame(frame); }
+    activeAt = performance.now();
+    if (!raf && visible && !lost) { last = activeAt; raf = requestAnimationFrame(frame); }
   };
 
   window.addEventListener("scroll", () => { measureProg(); zoneDirty = true; scrollAt = performance.now(); wake(); }, { passive: true });
-  window.addEventListener("resize", () => { resize(); measureProg(); zoneDirty = true; wake(); });
+  // Mobile browsers fire resize each time the address bar slides. Reallocating the GL buffer for that
+  // is wasted work (and memory churn over a long session), so only a real change in size is acted on.
+  let vw = window.innerWidth, vh = window.innerHeight, resizeT = 0;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => {
+      const w = window.innerWidth, h = window.innerHeight;
+      if (w === vw && Math.abs(h - vh) < vh * 0.2) { measureProg(); zoneDirty = true; wake(); return; }
+      vw = w; vh = h;
+      resize(); measureProg(); zoneDirty = true; wake();
+    }, 200);
+  });
+  window.addEventListener("touchstart", wake, { passive: true });
+  window.addEventListener("keydown", wake);
+  let lost = false;                                  // the GPU can take the context back (memory pressure, long sessions)
+  canvas.addEventListener("webglcontextlost", e => {
+    e.preventDefault(); lost = true;
+    cancelAnimationFrame(raf); raf = 0;
+    canvas.style.display = "none";                   // the dark page background shows through
+  });
+  canvas.addEventListener("webglcontextrestored", () => location.reload());
   document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) wake(); });
   if (!reduce && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
     window.addEventListener("pointermove", e => {
       tx = e.clientX / window.innerWidth - 0.5;
       ty = 0.5 - e.clientY / window.innerHeight;
+      wake();
     }, { passive: true });
   }
 
