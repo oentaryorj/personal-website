@@ -1,24 +1,21 @@
 /* ============================================================================
-   AI field: the command centre.
+   AI field: the gateway.
 
-   Raw WebGL, no libraries, no assets. A control room drawn in light, with a
-   large ticked gate at its heart: a hologram Earth inside it (the continents as
-   glowing dots from baked Natural Earth data, a pillar of light and a spreading
-   ring on each of the five markets) and three tilted orbit rings. Around it sit
-   the instruments: a row of gauges, leader lines, a radar, framed by console lips and edge rulers.
+   Raw WebGL, no libraries, no assets. A large ticked gate with a hologram Earth
+   inside it (the continents as glowing dots from baked Natural Earth data, a
+   pillar of light and a spreading ring on each of the five markets) and three
+   tilted orbit rings, framed by console lips.
 
-   Scrolling flies you through the gate: the cockpit swells past the screen and
-   a ribbed corridor of lit panels opens beyond it. The rest of the page travels
-   along that corridor, and the light at its end warms and grows towards the close.
-   A targeting reticle follows the pointer, and a notch on the right ruler tracks
-   scroll position.
+   Scrolling flies you through the gate: the gate swells past the screen and a
+   ribbed corridor of lit panels opens beyond it. The rest of the page travels
+   along that corridor, and the light at its end grows towards the close.
 
    It is brightest on the title, the interlude and the close, and recedes to a
    calm wash behind reading chapters so text always sits on a quiet ground.
    Reduced motion: one still frame. No WebGL: the CSS gradient stays.
-   Responsive: on upright phones the gate moves above the type and only the gate
-   and frame are drawn; the render scale adapts to the device's frame rate.
-   ========================================================================== */
+   Responsive: on upright phones the gate moves above the type; the render
+   scale adapts to the device's frame rate.
+*/
 (() => {
   "use strict";
   const canvas = document.getElementById("aiField");
@@ -43,8 +40,6 @@
     uniform float uProg;      // 0 top .. 1 end of page, follows scroll
     uniform float uEnergy;    // 0..1, follows the chapter
     uniform vec2  uMouse;     // -0.5..0.5
-    uniform float uPortrait;
-    uniform float uPointer;   // 1 when a fine pointer is present
     uniform sampler2D uLand;  // 360 x 180 land mask, row 0 = 90S, column 0 = 180W
     uniform vec4  uFree;      // x, y of the region where the scene is at full strength, softness, level outside it
     uniform vec3  uGate;      // gate centre x (aspect-scaled), centre y, radius
@@ -170,44 +165,7 @@
       return gate;
     }
 
-    // ---------------------------------------------------------- instruments --
-    vec3 gauge(vec2 q, float r, float val){
-      float aa = 1.5 / uRes.y;
-      float d = length(q);
-      if (d > r * 1.2) return vec3(0.0);
-      float ang = mod(1.5707963 - atan(q.y, q.x), 6.2831853) / 6.2831853;      // clockwise from the top
-      vec3 c = cy * ringL(d, r, aa * 1.1) * 0.55;
-      c += cy * ringL(d, r * 0.72, aa) * 0.30;
-      c += ice * ringL(d, r * 0.72, aa * 2.4) * step(ang, val) * 0.95;
-      float tk = 1.0 - smoothstep(0.10, 0.18, fract(ang * 36.0));
-      c += cy * smoothstep(r * 0.90, r * 0.93, d) * smoothstep(r * 0.985, r * 0.95, d) * tk * 0.55;
-      c += ice * exp(-pow(d / (r * 0.10), 2.0)) * 0.8;
-      return c;
-    }
-
-    vec3 radar(vec2 q, float r, float t){
-      float aa = 1.5 / uRes.y;
-      float d = length(q);
-      if (d > r * 1.1) return vec3(0.0);
-      float a = atan(q.y, q.x);
-      vec3 c = cy * ringL(d, r, aa * 1.2) * 0.75;
-      c += cy * (ringL(d, r * 0.66, aa) + ringL(d, r * 0.33, aa)) * 0.28;
-      c += cy * (smoothstep(aa * 1.2, 0.0, abs(q.x)) + smoothstep(aa * 1.2, 0.0, abs(q.y))) * step(d, r) * 0.22;
-      float sw = t * 1.3;
-      float since = mod(sw - a, 6.2831853);                                   // how long ago the sweep passed this angle
-      c += cy * exp(-since * 2.0) * step(d, r) * 0.34;
-      c += ice * exp(-since * 26.0) * step(d, r) * 0.5;
-      for (int i = 0; i < 5; i++){
-        float fi = float(i);
-        float ba = fi * 2.399 + 0.6;
-        float br = r * (0.28 + 0.62 * h21(vec2(fi, 3.1)));
-        float bs = mod(sw - ba, 6.2831853);
-        c += warm * exp(-pow(length(q - vec2(cos(ba), sin(ba)) * br) / (r * 0.04), 2.0)) * exp(-bs * 0.9) * 1.3;
-      }
-      return c;
-    }
-
-    vec3 cockpit(vec2 p, vec2 gc, float R, float t, float lift, float port, float asp){
+    vec3 cockpit(vec2 p, vec2 gc, float R, float t, float lift, float asp){
       float aa = 1.5 / uRes.y;
       vec3 c = gateArt(p - gc, R, t, lift, aa);
       float hw = asp * 0.5;
@@ -219,31 +177,6 @@
                    min(seg(p, vec2(-hw + 0.10, 0.028), vec2(-hw + 0.03, 0.0)), seg(p, vec2(hw - 0.10, 0.028), vec2(hw - 0.03, 0.0))));
       c += cy * smoothstep(aa * 1.5, 0.0, min(lipT, lipB)) * 0.5;
 
-      float ins = 1.0 - port;                                   // upright screens keep the gate and the frame only
-      if (ins > 0.01){
-        float k = R / 0.285;
-        // a row of six gauges across the top
-        vec3 row = vec3(0.0);
-        if (abs(p.y - 0.925) < 0.04 * k) for (int i = 0; i < 6; i++){
-          float fi = float(i);
-          row += gauge(p - vec2((fi - 2.5) * 0.095 * k, 0.925), 0.027 * k, 0.35 + 0.6 * (0.5 + 0.5 * sin(t * 0.37 + fi * 1.9)));
-        }
-        c += row * ins;
-
-        // two gauges on leader lines from the gate
-        vec2 gA = gc + R * vec2(-1.30, 0.62), gB = gc + R * vec2(-1.24, -0.68);
-        float gr = R * 0.10;
-        vec3 lead = vec3(0.0);
-        lead += gauge(p - gA, gr, 0.72) + gauge(p - gB, gr, 0.41 + 0.2 * sin(t * 0.5));
-        float lA = min(seg(p, gc + R * 0.98 * normalize(vec2(-1.30, 0.62)), gA + vec2(gr * 1.2, 0.0)), seg(p, gA - vec2(gr * 1.2, 0.0), gA - vec2(gr * 3.2, 0.0)));
-        float lB = min(seg(p, gc + R * 0.98 * normalize(vec2(-1.24, -0.68)), gB + vec2(gr * 1.2, 0.0)), seg(p, gB - vec2(gr * 1.2, 0.0), gB - vec2(gr * 3.2, 0.0)));
-        lead += cy * smoothstep(aa * 1.3, 0.0, min(lA, lB)) * 0.5;
-        c += lead * ins;
-
-        // the console below the gate: one radar
-        vec2 rc = vec2(gc.x - R * 0.60, 0.150 * k + 0.012);
-        c += radar(p - rc, 0.085 * k, t) * ins;
-      }
       return c;
     }
 
@@ -285,7 +218,6 @@
       float asp = uRes.x / uRes.y;
       vec2 p = vec2((uv.x - 0.5) * asp, uv.y);
       float t = uTime;
-      float port = uPortrait;
       float lift = uProg * uProg * (3.0 - 2.0 * uProg);
       float aa = 1.5 / uRes.y;
       float fly = uFly.x;
@@ -306,7 +238,7 @@
       float cockW = 1.0 - smoothstep(0.30, 0.78, fly);
       float corrW = smoothstep(0.22, 0.85, fly);
       vec3 scene = vec3(0.0);
-      if (cockW > 0.001) scene += cockpit(gc + (p - gc) / zoom, gc, R, t, lift, port, asp) * cockW;
+      if (cockW > 0.001) scene += cockpit(gc + (p - gc) / zoom, gc, R, t, lift, asp) * cockW;
       if (corrW > 0.001) scene += corridor(p - gc, uFly.y, t, lift) * corrW;
       float freeM = smoothstep(uFree.x - uFree.z, uFree.x + uFree.z, uv.x) * smoothstep(uFree.y - uFree.z, uFree.y + uFree.z, uv.y);
       scene *= mix(uFree.w, 1.0, freeM);                                    // where the type sits, the scene steps back
@@ -324,29 +256,6 @@
         glints += step(0.90, r) * tw * smoothstep(0.07, 0.0, length(f - off));
       }
       col += ice * glints * 0.40;
-
-      // -------------------------------------------------------- overlays --
-      float open = smoothstep(0.30, 1.0, uEnergy);
-      // targeting reticle that follows the pointer (fine pointers only)
-      vec2 mp = vec2(uMouse.x * asp, uMouse.y + 0.5);
-      vec2 am = abs(p - mp);
-      float rsz = 0.028;
-      float box = max(am.x, am.y);
-      float corners = smoothstep(aa * 1.6, 0.0, abs(box - rsz)) * step(rsz * 0.58, min(am.x, am.y));
-      float cross = smoothstep(aa * 1.4, 0.0, min(am.x, am.y)) * step(0.006, max(am.x, am.y)) * step(max(am.x, am.y), 0.014);
-      col += ice * (corners * 0.8 + cross * 0.7) * uPointer * open * smoothstep(0.0, 0.02, length(uMouse));
-      // rulers down both edges; the notch on the right is where you are in the page
-      if (port < 0.5){
-        float yy = (uv.y + lift * 0.6) * 90.0;
-        float idx = floor(yy);
-        float len = (mod(idx, 5.0) < 0.5 ? 0.016 : 0.007);
-        float line = smoothstep(aa * 1.3, 0.0, abs(fract(yy + 0.5) - 0.5) / 90.0);
-        float exR = (1.0 - uv.x) * asp, exL = uv.x * asp;
-        float notch = step(exR, 0.022) * smoothstep(0.004, 0.0, abs(uv.y - (0.96 - uProg * 0.92)));
-        col += cy * (step(exR, len) + step(exL, len) * 0.6) * line * 0.5 * (0.4 + 0.6 * open) + ice * notch * 0.9 * (0.4 + 0.6 * open);
-      }
-      // an occasional scan line sweeping the whole screen
-      col += cy * exp(-pow((uv.y - fract(t * 0.07)) * 160.0, 2.0)) * 0.05 * open;
 
       // --------------------------------------------- chapter energy, finish --
       vec3 wash = mix(vec3(0.030, 0.034, 0.042), vec3(0.010, 0.012, 0.015), uv.y);
@@ -395,7 +304,7 @@
   }
   const U = n => gl.getUniformLocation(prog, n);
   const $ = sel => document.querySelector(sel);
-  const u = { res: U("uRes"), time: U("uTime"), prog: U("uProg"), energy: U("uEnergy"), mouse: U("uMouse"), portrait: U("uPortrait"), gate: U("uGate"), pointer: U("uPointer"), land: U("uLand"), free: U("uFree"), fly: U("uFly") };
+  const u = { res: U("uRes"), time: U("uTime"), prog: U("uProg"), energy: U("uEnergy"), mouse: U("uMouse"), gate: U("uGate"), land: U("uLand"), free: U("uFree"), fly: U("uFly") };
 
   /* ------------------------------------------------------------ the gate -- */
   // Wide screens: the empty right side. Upright screens: the free sky above the
@@ -433,7 +342,6 @@
     canvas.height = h;
     gl.viewport(0, 0, w, h);
     gl.uniform2f(u.res, w, h);
-    gl.uniform1f(u.portrait, portraitMQ.matches ? 1 : 0);
     fitGate();
     if (drawnAt) draw(drawnAt);                      // resizing clears the buffer: repaint at once so it never flashes black
   };
@@ -522,7 +430,6 @@
   measureProg();
   scrShown = scr;
   gl.uniform1i(u.land, 0);
-  gl.uniform1f(u.pointer, window.matchMedia("(hover: hover) and (pointer: fine)").matches ? 1 : 0);
   resize();
   document.documentElement.classList.add("has-field");
   const refit = () => { fitGate(); wake(); };
