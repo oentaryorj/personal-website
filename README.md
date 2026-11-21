@@ -4,23 +4,27 @@ Source for [oentaryorj.github.io](https://oentaryorj.github.io) (once GitHub Pag
 
 ## Stack
 
-Dependency-free static site: semantic HTML, hand-written CSS (no framework), and vanilla JavaScript for interactions — no build step required.
+Dependency-free static site: semantic HTML, hand-written CSS, and vanilla JavaScript. No build step.
 
-- Custom cursor + scroll progress bar
-- Canvas-based animated neural-network hero background
-- Scroll-triggered reveal animations (`IntersectionObserver`)
-- Animated counters, typed role text, skill bars, timeline
-- Fully responsive, respects `prefers-reduced-motion`
+Designed with the [scroll-craft](.claude/skills/scroll-craft) skill as a chaptered editorial page:
+
+- Title page, hard cuts between paper and ink chapters, margin folio of chapter ticks
+- Lateral career rail (scroll-driven pan)
+- Signature move, "Scatter to Grid": 250 points (one per production model) settle into four ordered grids as you scroll, while the count climbs to 250
+- Pointer-operated expertise index (keyboard accessible tabs)
+- Respects `prefers-reduced-motion`; no layout shift; no horizontal overflow on phones
+- Design brief: `scrollcraft/builds/richard/BRIEF.md`
 
 ## Structure
 
 ```
 index.html
 assets/
-  css/style.css
-  js/main.js
-  favicon.svg
-.github/workflows/deploy.yml   # GitHub Pages deploy
+  css/scrollcraft.css   # engine tokens and devices (unmodified)
+  css/style.css         # this site's design
+  js/scrollcraft.js     # engine (unmodified)
+  js/main.js            # folio, Scatter to Grid, expertise index
+.github/workflows/deploy.yml
 ```
 
 ## Local preview

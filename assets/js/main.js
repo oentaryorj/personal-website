@@ -1,439 +1,191 @@
-// ============================================================
-// Richard Oentaryo — Personal Site interactions
-// ============================================================
-(function () {
+/* ============================================================================
+   Page behaviour. The scroll devices live in scrollcraft.js (untouched).
+   This file holds the three things that are bespoke to this site:
+     1. the margin folio (chapter ticks that follow the reader)
+     2. the signature move, "Scatter to Grid" (250 points, one per model)
+     3. the craft index (pointer-operated tabs)
+   ========================================================================== */
+(() => {
   "use strict";
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (window.ScrollCraft) window.ScrollCraft.mount(document.body);
 
-  /* ---------------- Letterbox intro ---------------- */
-  const letterbox = document.querySelector(".letterbox");
-  if (letterbox) {
-    if (reduceMotion) letterbox.remove();
-    else letterbox.lastElementChild.addEventListener("animationend", () => letterbox.remove());
-  }
+  const year = document.getElementById("year");
+  if (year) year.textContent = new Date().getFullYear();
 
-  /* ---------------- Year ---------------- */
-  const yearEl = document.getElementById("year");
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
+  /* ---------------------------------------------------------- 1. folio -- */
+  (() => {
+    const folio = document.getElementById("folio");
+    if (!folio) return;
+    folio.hidden = false;
+    const chapters = [...document.querySelectorAll("[data-folio]")];
+    const links = new Map([...folio.querySelectorAll("a[data-ch]")].map(a => [a.dataset.ch, a]));
+    let current = null;
+    let raf = 0;
 
-  /* ---------------- Custom cursor ---------------- */
-  const cursorDot = document.getElementById("cursorDot");
-  const cursorRing = document.getElementById("cursorRing");
-  if (cursorDot && cursorRing && !reduceMotion && matchMedia("(hover: hover)").matches) {
-    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0, ringRaf = null;
-    // The ring eases toward the pointer; once it has caught up, the loop
-    // parks itself instead of writing a transform every frame forever.
-    function animateRing() {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
-      cursorRing.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%,-50%)`;
-      ringRaf = Math.abs(mouseX - ringX) + Math.abs(mouseY - ringY) > 0.3
-        ? requestAnimationFrame(animateRing)
-        : null;
-    }
-    window.addEventListener("mousemove", (e) => {
-      mouseX = e.clientX; mouseY = e.clientY;
-      cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
-      if (!ringRaf) ringRaf = requestAnimationFrame(animateRing);
-    }, { passive: true });
-
-    document.querySelectorAll('[data-cursor="link"]').forEach((el) => {
-      el.addEventListener("mouseenter", () => cursorRing.classList.add("active"));
-      el.addEventListener("mouseleave", () => cursorRing.classList.remove("active"));
-    });
-  } else if (cursorDot && cursorRing) {
-    cursorDot.style.display = "none";
-    cursorRing.style.display = "none";
-  }
-
-  /* ---------------- 3D card tilt ---------------- */
-  // A pure-CSS-transform tilt driven by pointer position — no extra
-  // layers, no canvas, just a translateZ/rotate already on the compositor
-  // thread. Fine-pointer only: touch has no hover to drive it from, and
-  // the constant pointermove listener isn't worth paying for on mobile.
-  if (!reduceMotion && matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    document.querySelectorAll(".tilt").forEach((card) => {
-      let raf = null;
-      function onMove(e) {
-        if (raf) return;
-        raf = requestAnimationFrame(() => {
-          const r = card.getBoundingClientRect();
-          const px = (e.clientX - r.left) / r.width - 0.5;
-          const py = (e.clientY - r.top) / r.height - 0.5;
-          card.style.setProperty("--tilt-x", (-py * 7).toFixed(2) + "deg");
-          card.style.setProperty("--tilt-y", (px * 9).toFixed(2) + "deg");
-          card.style.setProperty("--glow-x", `${(px + 0.5) * 100}%`);
-          card.style.setProperty("--glow-y", `${(py + 0.5) * 100}%`);
-          raf = null;
-        });
+    const update = () => {
+      raf = 0;
+      const mid = window.innerHeight * 0.5;
+      let hit = null;
+      for (const ch of chapters) {
+        const r = ch.getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) { hit = ch; break; }
       }
-      card.addEventListener("mousemove", onMove);
-      card.addEventListener("mouseleave", () => {
-        card.style.setProperty("--tilt-x", "0deg");
-        card.style.setProperty("--tilt-y", "0deg");
-      });
-    });
-  }
+      folio.classList.toggle("is-on", !!hit);
+      if (!hit) { current = null; links.forEach(a => a.removeAttribute("aria-current")); return; }
+      folio.dataset.tone = hit.classList.contains("ch--paper") ? "paper" : "ink";
+      if (hit !== current) {
+        current = hit;
+        links.forEach((a, k) => (k === hit.dataset.folio ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
+      }
+    };
+    const req = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener("scroll", req, { passive: true });
+    window.addEventListener("resize", req);
+    update();
+  })();
 
-  /* ---------------- Scroll progress + nav state ---------------- */
-  const progressBar = document.getElementById("progressBar");
-  const nav = document.getElementById("nav");
-  const toTop = document.getElementById("toTop");
-
-  function onScroll() {
-    const scrollTop = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-    if (progressBar) progressBar.style.transform = `scaleX(${pct / 100})`;
-    if (nav) nav.classList.toggle("scrolled", scrollTop > 40);
-    if (toTop) toTop.classList.toggle("visible", scrollTop > 600);
-  }
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
-
-  if (toTop) {
-    toTop.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
-    });
-  }
-
-  /* ---------------- Mobile menu ---------------- */
-  const navToggle = document.getElementById("navToggle");
-  const mobileMenu = document.getElementById("mobileMenu");
-  if (navToggle && mobileMenu) {
-    function setMenuOpen(open) {
-      navToggle.classList.toggle("open", open);
-      mobileMenu.classList.toggle("open", open);
-      navToggle.setAttribute("aria-expanded", String(open));
-      mobileMenu.setAttribute("aria-hidden", String(!open));
-    }
-    navToggle.addEventListener("click", () => {
-      setMenuOpen(!mobileMenu.classList.contains("open"));
-    });
-    mobileMenu.querySelectorAll("a").forEach((a) =>
-      a.addEventListener("click", () => setMenuOpen(false))
-    );
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    });
-  }
-
-  /* ---------------- Active section in nav ---------------- */
-  const navAnchors = Array.from(document.querySelectorAll(".nav-links a"));
-  const sectionTargets = navAnchors
-    .map((a) => document.querySelector(a.getAttribute("href")))
-    .filter(Boolean);
-  if (sectionTargets.length && "IntersectionObserver" in window) {
-    const navIO = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          navAnchors.forEach((a) =>
-            a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id)
-          );
-        });
-      },
-      { rootMargin: "-45% 0px -50% 0px" }
-    );
-    sectionTargets.forEach((s) => navIO.observe(s));
-  }
-
-  /* ---------------- Reveal on scroll ---------------- */
-  const revealEls = document.querySelectorAll(".reveal");
-  if ("IntersectionObserver" in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
-    );
-    revealEls.forEach((el) => io.observe(el));
-  } else {
-    revealEls.forEach((el) => el.classList.add("is-visible"));
-  }
-
-  /* ---------------- Animated counters ---------------- */
-  const counters = document.querySelectorAll("[data-count]");
-  function animateCounter(el) {
-    const target = parseFloat(el.dataset.count);
-    const prefix = el.dataset.prefix || "";
-    const suffix = el.dataset.suffix || "";
-    const duration = 1600;
-    const start = performance.now();
-    function frame(now) {
-      const p = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      const value = target * eased;
-      const display = Number.isInteger(target) ? Math.round(value) : value.toFixed(1);
-      el.textContent = prefix + display + suffix;
-      if (p < 1) requestAnimationFrame(frame);
-      else el.textContent = prefix + target + suffix;
-    }
-    requestAnimationFrame(frame);
-  }
-  // The markup already carries the final figures, so no-JS visitors see real
-  // numbers; only animate them when motion is welcome.
-  if (counters.length && !reduceMotion && "IntersectionObserver" in window) {
-    const cIO = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            animateCounter(entry.target);
-            cIO.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.6 }
-    );
-    counters.forEach((c) => cIO.observe(c));
-  }
-
-  /* ---------------- Cinematic stage ----------------
-     One fixed, full-page canvas composites every background layer: a
-     scroll-reactive colour field, drifting nebulae, volumetric light
-     shafts, a perspective grid on the hero floor and a parallax star
-     field — all in a single rAF loop. The hero's neural-network motif is
-     now a real 3D WebGL piece (see three-hero.js), not drawn here.
-
-     Everything that can be pre-rendered is. A first pass that built its
-     gradients inline each frame measured 22fps here: large-area
-     `lighter` compositing and per-frame createGradient calls dominate.
-     Baking those into sprites blitted per frame restores 60fps.        */
-  (function initStage() {
-    const canvas = document.getElementById("stage");
-    if (!canvas) return;
+  /* ------------------------------------- 2. signature: Scatter to Grid -- */
+  (() => {
+    const section = document.getElementById("scale");
+    const canvas = document.getElementById("modelField");
+    const counter = document.getElementById("modelCount");
+    if (!section || !canvas || !counter) return;
     const ctx = canvas.getContext("2d");
-    const hero = document.getElementById("hero");
+    if (!ctx) return;
 
-    let W = 0, H = 0, dpr = 1, heroH = 800, lastW = 0;
-    let stars = [];
-    let gridLayer = null;
-    let fieldGrad = null, fieldKey = -1;
+    const N = 250;           // one point per production model
+    const CLUSTERS = 4;      // four markets
+    const COLS = 8;          // 8 x 8 slots per market (63 or 64 used)
 
-    const atm = document.querySelector(".atm");
-    const heroInner = document.querySelector(".hero-inner");
-    let heroStyled = false;
-    let lastDriftY = -1;
-    let t = 0;
-    let velocity = 0;
-    let scrollY = window.scrollY;
-    let target = scrollY;
+    // deterministic scatter so the page looks the same every visit
+    let seed = 20040701;
+    const rnd = () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const dots = Array.from({ length: N }, (_, i) => {
+      const cluster = i % CLUSTERS;
+      const slot = Math.floor(i / CLUSTERS);
+      const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd());
+      return {
+        sx: 0.04 + rnd() * 0.92, sy: 0.04 + rnd() * 0.92,       // scatter
+        ca: a, cr: rr,                                           // blob inside cluster
+        cluster, row: Math.floor(slot / COLS), col: slot % COLS, // grid slot
+        ph: rnd() * Math.PI * 2, amp: 0.006 + rnd() * 0.014
+      };
+    });
+    const centers = [[0.27, 0.27], [0.73, 0.27], [0.27, 0.73], [0.73, 0.73]];
 
-    window.addEventListener("scroll", () => { target = window.scrollY; }, { passive: true });
-
-    const wrap = (v, r) => { const m = v % r; return m < 0 ? m + r : m; };
-    const lerp = (a, b, p) => a + (b - a) * p;
-
-    function surface(w, h) {
-      const c = document.createElement("canvas");
-      c.width = Math.max(1, w | 0);
-      c.height = Math.max(1, h | 0);
-      return c;
-    }
-
-    /* The grid's converging lines and horizon glow never move; only the
-       horizontal rungs flow, so bake the rest into one layer. */
-    function makeGridLayer() {
-      const c = surface(W, H);
-      const g = c.getContext("2d");
-      const horizon = H * .86;
-      const vpX = W * .5;
-
-      const glow = g.createRadialGradient(vpX, horizon, 0, vpX, horizon, W * .5);
-      glow.addColorStop(0, "rgba(70,190,255,.13)");
-      glow.addColorStop(1, "rgba(70,190,255,0)");
-      g.fillStyle = glow;
-      g.fillRect(0, horizon - W * .5, W, W);
-
-      g.lineWidth = 1;
-      const cols = 22;
-      for (let i = 0; i <= cols; i++) {
-        const xb = vpX + (i / cols - .5) * W * 3.4;
-        const lg = g.createLinearGradient(vpX, horizon, xb, H);
-        lg.addColorStop(0, "rgba(96,178,255,0)");
-        lg.addColorStop(1, "rgba(96,178,255,.18)");
-        g.strokeStyle = lg;
-        g.beginPath();
-        g.moveTo(vpX, horizon);
-        g.lineTo(xb, H);
-        g.stroke();
-      }
-      return c;
-    }
-
-    function build() {
-      stars = Array.from({ length: Math.min(170, Math.round((W * H) / 8200)) }, () => {
-        const depth = .25 + Math.random() * 1.15;
-        return {
-          x: Math.random() * W,
-          y: Math.random() * H,
-          depth,
-          r: (.35 + depth * .8) * (.8 + Math.random() * .4),
-          a: Math.min(.9, .16 + depth * .42),
-          tw: .004 + Math.random() * .017,
-          ph: Math.random() * Math.PI * 2,
-        };
-      });
-
-      gridLayer = makeGridLayer();
-    }
-
-    function resize() {
-      const nextW = window.innerWidth;
-      const nextH = canvas.clientHeight || window.innerHeight;
-      const nextDpr = Math.min(window.devicePixelRatio || 1, 1.75);
-      heroH = hero ? hero.offsetHeight : nextH;
-      // The canvas is 100lvh, so a mobile toolbar collapsing doesn't change
-      // its size at all — nothing to reallocate or rebuild.
-      if (nextW === W && nextH === H && nextDpr === dpr) return;
-      dpr = nextDpr;
-      W = nextW;
-      H = nextH;
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
+    let W = 0, H = 0, dpr = 1, inkSoft = "", accent = "", ink = "";
+    const readColors = () => {
+      const cs = getComputedStyle(section);
+      ink = cs.getPropertyValue("--sc-ink").trim() || "#ECEAE4";
+      inkSoft = cs.getPropertyValue("--sc-ink-soft").trim() || "#A3A8B1";
+      accent = cs.getPropertyValue("--sc-accent").trim() || "#8FA8FF";
+    };
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const r = canvas.getBoundingClientRect();
+      W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      fieldGrad = null;
-      if (stars.length && Math.abs(W - lastW) < 40) {
-        gridLayer = makeGridLayer();
-      } else {
-        lastW = W;
-        build();
-      }
-      // Resetting canvas.width wipes it; with reduced motion there is no
-      // rAF loop to repaint, so the backdrop used to go blank on resize.
-      if (reduceMotion) frame();
-    }
+      readColors();
+      draw(true);
+    };
 
-    /* Colour field — the "camera" travels into a colder, darker register
-       as the page scrolls, so depth reads as distance. */
-    function drawField(progress) {
-      const key = Math.round(progress * 30);
-      if (key !== fieldKey || !fieldGrad) {
-        fieldKey = key;
-        const p = key / 30;
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, `rgb(${lerp(10, 5, p) | 0},${lerp(26, 14, p) | 0},${lerp(66, 40, p) | 0})`);
-        g.addColorStop(.55, `rgb(${lerp(6, 4, p) | 0},${lerp(14, 9, p) | 0},${lerp(36, 26, p) | 0})`);
-        g.addColorStop(1, "#04070f");
-        fieldGrad = g;
-      }
-      ctx.fillStyle = fieldGrad;
-      ctx.fillRect(0, 0, W, H);
-    }
+    const progress = () => {
+      const r = section.getBoundingClientRect();
+      const travel = Math.max(section.offsetHeight - window.innerHeight, 1);
+      return clamp(-r.top / travel);
+    };
 
-    function drawGrid(fade) {
-      ctx.globalAlpha = fade;
-      ctx.drawImage(gridLayer, 0, 0, W, H);
+    let target = reduce ? 1 : progress(), shown = target, last = -1, visible = true;
+
+    const draw = (force) => {
+      if (!force && Math.abs(shown - last) < 0.00005 && !visible) return;
+      last = shown;
+      const p = shown;
+      const toCluster = smooth(0.10, 0.42, p);   // scatter to four markets
+      const toGrid    = smooth(0.40, 0.72, p);   // markets to ordered grids
+      const lit       = Math.floor(N * smooth(0.36, 0.84, p) + 0.0001);
+      const unit = Math.min(W, H);
+      const pitch = unit * (W < H ? 0.052 : 0.056);
+      const r = Math.max(1.6, unit * 0.0105);
+      const t = performance.now() * 0.0004;
+      const idle = reduce ? 0 : 1 - toCluster;
+
+      ctx.clearRect(0, 0, W, H);
+
+      for (let i = 0; i < N; i++) {
+        const d = dots[i];
+        const sx = (d.sx + Math.sin(t + d.ph) * d.amp * idle) * W;
+        const sy = (d.sy + Math.cos(t * 1.1 + d.ph) * d.amp * idle) * H;
+        const [cx0, cy0] = centers[d.cluster];
+        const cx = cx0 * W + Math.cos(d.ca) * d.cr * unit * 0.085;
+        const cy = cy0 * H + Math.sin(d.ca) * d.cr * unit * 0.085;
+        const gx = cx0 * W + (d.col - (COLS - 1) / 2) * pitch;
+        const gy = cy0 * H + (d.row - (COLS - 1) / 2) * pitch;
+
+        const ax = sx + (cx - sx) * toCluster, ay = sy + (cy - sy) * toCluster;
+        const x = ax + (gx - ax) * toGrid,     y = ay + (gy - ay) * toGrid;
+
+        const on = i < lit;
+        ctx.beginPath();
+        ctx.arc(x, y, on ? r * 1.08 : r * 0.78, 0, Math.PI * 2);
+        if (on) { ctx.globalAlpha = 1; ctx.fillStyle = accent; ctx.fill(); }
+        else { ctx.globalAlpha = 0.55; ctx.strokeStyle = inkSoft; ctx.lineWidth = 1; ctx.stroke(); }
+      }
       ctx.globalAlpha = 1;
 
-      const horizon = H * .86;
-      const depth = H - horizon;
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 16; i++) {
-        const d = ((i / 16) + t * .00024) % 1;
-        const y = horizon + depth * Math.pow(d, 2.6);
-        ctx.strokeStyle = `rgba(96,178,255,${fade * .22 * Math.min(1, d * 4) * (1 - d * .25)})`;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-      }
+      const shownCount = Math.min(N, lit);
+      counter.textContent = shownCount >= N ? "250+" : String(shownCount);
+    };
+
+    const tick = () => {
+      if (!reduce) shown += (target - shown) * 0.12;
+      if (Math.abs(target - shown) < 0.0004) shown = target;
+      if (visible) draw();
+      requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("scroll", () => { target = progress(); }, { passive: true });
+    window.addEventListener("resize", resize);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { rootMargin: "20% 0px" }).observe(section);
     }
-
-    /* Stars stretch into warp streaks in proportion to scroll speed and
-       depth — near stars streak more — then relax back to points. Lines
-       are no dearer to draw than the arcs they replace. */
-    function drawStars() {
-      const warp = Math.max(-70, Math.min(70, velocity));
-      const streaking = Math.abs(warp) > 1.2;
-      for (const s of stars) {
-        s.x += .012 * s.depth;
-        if (s.x > W + 4) s.x = -4;
-        const py = wrap(s.y - scrollY * s.depth * .38, H + 60) - 30;
-        const tw = s.a + Math.sin(t * s.tw + s.ph) * .26;
-        if (tw <= 0) continue;
-        if (streaking) {
-          const len = warp * s.depth * .55;
-          ctx.strokeStyle = `rgba(214,232,255,${Math.min(1, tw * 1.1)})`;
-          ctx.lineWidth = s.r * 1.4;
-          ctx.beginPath();
-          ctx.moveTo(s.x, py);
-          ctx.lineTo(s.x, py + len);
-          ctx.stroke();
-        } else {
-          ctx.beginPath();
-          ctx.arc(s.x, py, s.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(214,232,255,${tw})`;
-          ctx.fill();
-        }
-      }
-    }
-
-    /* The hero pulls away as you scroll: its copy drifts at 0.84x scroll
-       speed and fades, like a camera tracking back. Driven by the real
-       scroll position (not the smoothed one) so text never wobbles, and
-       styles are cleared at rest so no layer stays promoted.
-       Tuned so the copy has fully faded before the drift carries it into
-       the hero's bottom edge (overflow: hidden would otherwise slice a
-       hard line through the stats). Desktop only: on phones the hero is a
-       tall block of text people read while scrolling, so fading it early
-       would hurt, and there's no sphere there to pull toward anyway. */
-    const driftOK = matchMedia("(min-width: 901px)").matches;
-    function driftHero() {
-      if (!heroInner || reduceMotion || !driftOK) return;
-      const y = target;
-      if (y <= 1 || y > heroH) {
-        if (heroStyled && y <= 1) {
-          heroInner.style.transform = "";
-          heroInner.style.opacity = "";
-          heroStyled = false;
-          lastDriftY = -1;
-        }
-        return;
-      }
-      if (y === lastDriftY) return;
-      lastDriftY = y;
-      const p = y / heroH;
-      heroInner.style.transform = `translate3d(0, ${(y * .16).toFixed(1)}px, 0)`;
-      heroInner.style.opacity = Math.max(0, 1 - p * 1.7).toFixed(3);
-      heroStyled = true;
-    }
-
-    function frame() {
-      t += 1;
-      const prev = scrollY;
-      scrollY += (target - scrollY) * .08;
-      velocity = scrollY - prev;
-      driftHero();
-      const doc = document.documentElement.scrollHeight - H;
-      const progress = doc > 0 ? Math.min(1, scrollY / doc) : 0;
-      const heroFade = Math.max(0, 1 - scrollY / (heroH * .85));
-
-      drawField(progress);
-      if (atm) {
-        const driftX = Math.sin(t * .0002) * 14;
-        const driftY = Math.cos(t * .00015) * 10;
-        atm.style.transform =
-          `translate3d(${driftX}px, ${-Math.min(scrollY * .05, 50) + driftY}px, 0)`;
-      }
-      if (heroFade > .01) drawGrid(heroFade);
-      drawStars();
-
-      if (!reduceMotion) requestAnimationFrame(frame);
-    }
-
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resize, 150);
-    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(resize);
     resize();
-    frame();
+    if (reduce) { shown = target = 1; draw(true); } else { requestAnimationFrame(tick); }
+  })();
+
+  /* ---------------------------------------------------- 3. craft index -- */
+  (() => {
+    const root = document.getElementById("craftIndex");
+    if (!root) return;
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+    const select = (i, focus) => {
+      tabs.forEach((t, k) => {
+        const on = k === i;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        panels[k].hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => select(i));
+      t.addEventListener("keydown", e => {
+        const k = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+        if (k) { e.preventDefault(); select((i + k + tabs.length) % tabs.length, true); }
+        else if (e.key === "Home") { e.preventDefault(); select(0, true); }
+        else if (e.key === "End") { e.preventDefault(); select(tabs.length - 1, true); }
+      });
+      if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+        t.addEventListener("pointerenter", () => select(i));
+      }
+    });
+    select(0);
   })();
 })();
