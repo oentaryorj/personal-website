@@ -51,3 +51,6 @@ The noise-based filaments still read as turbulent. Replaced with an analytic neu
 
 ## Revision 4: regular shape
 Owner wanted a more regular shape related to AI/ML. The scattered network became a symmetric, fully connected feed-forward diagram (6 evenly spaced layers, 4-6-8-8-6-4) over a faint regular dot matrix. Connection strength varies like trained weights (few strong, most faint); a front of activation sweeps through the layers, and scroll shifts its phase. Faint connections were thinned and the type side dimmed after the first pass competed with the text.
+
+## Revision 5: no overlap, CV content
+The diagram is confined to a region (right side on wide screens, a strip above the type on phones) and switched off entirely in every chapter with reading text, the career rail and the peak. Content was extended from the owner's CV: dated roles, real metrics, the four market names (Singapore, Hong Kong, Taiwan, India), the CV tagline as the interlude, honours, stack and community roles. Phone and email from the CV were deliberately not published on the page.

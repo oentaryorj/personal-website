@@ -37,6 +37,7 @@
     uniform float uEnergy;   // 0..1.2, follows the chapter
     uniform float uHdr;      // 0 = SDR tone map, 1 = allow highlights above white
     uniform vec2  uMouse;    // -0.5..0.5
+    uniform vec4  uRegion;   // x0,y0,x1,y1 in 0..1 (y up): the only place the diagram may live
 
     float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -52,19 +53,22 @@
     float nodeY(float l, float k, float sp){ return (k - (layerN(l) - 1.0) * 0.5) * sp; }
 
     void main(){
-      float asp = uRes.x / uRes.y;
       vec2 uv = gl_FragCoord.xy / uRes;
-      vec2 p  = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
       float t = uTime;
 
-      // fit the diagram to the screen (portrait phones shrink it to the width)
-      float S = min(1.0, asp * 0.94);
-      vec2 w = p / S + uMouse * vec2(0.020, 0.014);
-      float halfW = 0.50 * asp / S * 0.94;      // half-width of the diagram in its own units
-      float xmin = -halfW, xmax = halfW;
+      // the diagram is fitted into its region, never the whole screen
+      vec2 rc = vec2(uRegion.x + uRegion.z, uRegion.y + uRegion.w) * 0.5;
+      vec2 rs = vec2(uRegion.z - uRegion.x, uRegion.w - uRegion.y) * uRes;   // pixels
+      float k = min(rs.x / 1.30, rs.y / 1.15);                               // pixels per design unit
+      vec2 w = (gl_FragCoord.xy - rc * uRes) / k + uMouse * vec2(0.020, 0.014);
+      vec2 q = (gl_FragCoord.xy - rc * uRes) / (rs * 0.5);                   // -1..1 inside the region
+      float inReg = smoothstep(1.0, 0.74, abs(q.x)) * smoothstep(1.0, 0.74, abs(q.y));
+      float radial = 1.0 - smoothstep(0.50, 1.0, length(q));
+
+      float xmin = -0.5, xmax = 0.5;
       float dx = (xmax - xmin) / 5.0;
       float sp = 0.118;                         // row spacing
-      float lw = 0.0026, nr = 0.0150;
+      float lw = 1.7 / k, nr = 0.030;
 
       // the forward pass: a front of activation sweeping through the layers
       float cycle = 8.2;
@@ -72,12 +76,13 @@
       float s = (w.x - xmin) / dx;              // position in layer units, 0..5
 
       // ---- backdrop: a regular matrix of dots (tensor grid) ----
-      vec2 gp = fract(p * 15.0 + uMouse * 0.4) - 0.5;
+      vec2 gp = fract(w * 9.0 + uMouse * 0.2) - 0.5;
       float dots = smoothstep(0.075, 0.0, length(gp));
-      float gl = exp(-pow((p.x / S - xmin) / dx - f, 2.0) * 0.30);
-      vec3 col = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
-      col += vec3(0.016, 0.040, 0.100) * exp(-length(p - vec2(0.50 * asp, 0.30)) * 1.4);
-      col += vec3(0.22, 0.38, 0.85) * dots * (0.060 + 0.16 * gl);
+      float gl = exp(-pow(s - f, 2.0) * 0.30);
+      vec3 base = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
+      vec3 col = base;
+      col += vec3(0.016, 0.040, 0.100) * exp(-dot(q, q) * 3.2) * 1.2;
+      col += vec3(0.22, 0.38, 0.85) * dots * radial * (0.060 + 0.16 * gl);
 
       // ---- connections between the two layers this pixel sits between ----
       float lay = clamp(floor(s), 0.0, 4.0);
@@ -130,15 +135,13 @@
       }
       col += (vec3(0.62, 0.80, 1.00) * node + vec3(0.40, 0.65, 1.00) * ring) * 0.55;
 
-      // calmer on the left where the type sits
-      float lane = 0.24 + 0.76 * smoothstep(-0.30 * asp, 0.38 * asp, p.x);
-      vec3 base = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
-      col = base + (col - base) * lane;
+      // nothing outside the region: the type area stays clean
+      col = base + (col - base) * inReg;
 
       col *= uEnergy;
 
       // vignette
-      col *= 1.0 - 0.50 * smoothstep(0.35, 1.25, length(uv - 0.5) * 1.6);
+      col *= 1.0 - 0.35 * smoothstep(0.35, 1.25, length(uv - 0.5) * 1.6);
 
       // tone map. SDR: soft roll-off to white. HDR: leave headroom for the pulses.
       vec3 sdr = 1.0 - exp(-col * 1.25);
@@ -172,7 +175,7 @@
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
   const U = n => gl.getUniformLocation(prog, n);
-  const uRes = U("uRes"), uTime = U("uTime"), uScroll = U("uScroll"), uEnergy = U("uEnergy"), uHdr = U("uHdr"), uMouse = U("uMouse");
+  const uRes = U("uRes"), uTime = U("uTime"), uScroll = U("uScroll"), uEnergy = U("uEnergy"), uHdr = U("uHdr"), uMouse = U("uMouse"), uRegion = U("uRegion");
 
   /* ---------------------------------------------------- HDR, best effort -- */
   let hdr = 0;
@@ -189,7 +192,7 @@
   if (!hdr && "drawingBufferColorSpace" in gl) { try { gl.drawingBufferColorSpace = "display-p3"; } catch (e) {} }
 
   /* ---------------------------------------------------------- resolution -- */
-  let scale = small ? 0.45 : 0.62;                 // adaptive, see frame timing
+  let scale = small ? 0.6 : 0.85;                 // adaptive, see frame timing
   const resize = () => {
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const w = Math.max(2, Math.round(window.innerWidth * dpr * scale));
@@ -202,11 +205,17 @@
   window.addEventListener("resize", resize);
   resize();
 
+  /* ------------------------------------------------------------- region -- */
+  // The diagram only ever lives in empty space: the right of the title page,
+  // the interlude and the close on wide screens, the strip above the type on
+  // phones. Everywhere text can sit, the field is switched off entirely.
+  const region = small ? [0.0, 0.76, 1.0, 0.99] : [0.62, 0.07, 0.99, 0.93];
+
   /* ------------------------------------------------------------- energy -- */
   // which chapter is under the middle of the screen decides how loud the field is
   const zones = [
-    ["#top", 0.80], [".intertitle", 0.85], ["#about", 0.34], ["#career", 0.48], ["#scale", 0.40],
-    ["#recognition", 0.30], ["#research", 0.32], ["#craft", 0.32], ["#contact", 0.75]
+    ["#top", 0.90], [".intertitle", 0.90], ["#contact", 0.85],
+    ["#about", 0], ["#career", 0], ["#scale", 0], ["#recognition", 0], ["#research", 0], ["#craft", 0]
   ].map(([sel, e]) => [document.querySelector(sel), e]).filter(([el]) => el);
   let energy = 1, energyTarget = 1;
   const pickEnergy = () => {
@@ -231,13 +240,14 @@
   document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) last = performance.now(); });
 
   const t0 = performance.now();
-  let last = t0, slow = 0, fast = 0;
+  let last = t0, slow = 0, fast = 0, blank = false;
   const draw = (time, dt) => {
     gl.uniform1f(uTime, reduce ? 12.0 : time);
     gl.uniform1f(uScroll, scrollShown);
     gl.uniform1f(uEnergy, energy);
     gl.uniform1f(uHdr, hdr);
     gl.uniform2f(uMouse, mx, my);
+    gl.uniform4f(uRegion, region[0], region[1], region[2], region[3]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
@@ -246,14 +256,16 @@
     if (!visible) return;
     const dt = Math.min(now - last, 100); last = now;
     scrollShown += (scrollVh - scrollShown) * (reduce ? 1 : 0.10);
-    energy += (energyTarget - energy) * 0.045;
+    energy += (energyTarget - energy) * 0.06;
+    if (energy < 0.004 && energyTarget === 0) { if (!blank) { energy = 0; draw((now - t0) / 1000, dt); blank = true; } return; }
+    blank = false;
     mx += (tx - mx) * 0.05; my += (ty - my) * 0.05;
     draw((now - t0) / 1000, dt);
 
     // adaptive resolution: if the shader cannot hold ~40fps, render fewer pixels
     if (dt > 26) { slow++; fast = 0; } else { fast++; slow = Math.max(0, slow - 1); }
     if (slow > 40 && scale > 0.3) { scale = Math.max(0.3, scale * 0.82); slow = 0; resize(); }
-    if (fast > 600 && scale < (small ? 0.45 : 0.62)) { scale = Math.min(small ? 0.45 : 0.62, scale * 1.1); fast = 0; resize(); }
+    if (fast > 600 && scale < (small ? 0.6 : 0.85)) { scale = Math.min(small ? 0.6 : 0.85, scale * 1.1); fast = 0; resize(); }
   };
 
   if (reduce) {

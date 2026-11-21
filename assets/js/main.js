@@ -34,7 +34,8 @@
         const r = ch.getBoundingClientRect();
         if (r.top <= mid && r.bottom > mid) { hit = ch; break; }
       }
-      folio.classList.toggle("is-on", !!hit);
+      // the career rail slides under the left margin, so the ticks step aside there
+      folio.classList.toggle("is-on", !!hit && hit.id !== "career");
       if (!hit) { current = null; links.forEach(a => a.removeAttribute("aria-current")); return; }
       folio.dataset.tone = hit.classList.contains("ch--paper") ? "paper" : "ink";
       if (hit !== current) {
@@ -59,6 +60,7 @@
 
     const N = 250;           // one point per production model
     const CLUSTERS = 4;      // four markets
+    const MARKETS = ["Singapore", "Hong Kong", "Taiwan", "India"];
     const COLS = 8;          // 8 x 8 slots per market (63 or 64 used)
 
     // deterministic scatter so the page looks the same every visit
@@ -142,6 +144,20 @@
         else { ctx.globalAlpha = 0.55; ctx.strokeStyle = inkSoft; ctx.lineWidth = 1; ctx.stroke(); }
       }
       ctx.globalAlpha = 1;
+
+      // market labels appear as the points gather
+      const labelA = smooth(0.30, 0.46, p);
+      if (labelA > 0.01) {
+        ctx.font = `500 ${Math.max(10, Math.round(unit * 0.026))}px Geist, system-ui, sans-serif`;
+        ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = inkSoft; ctx.globalAlpha = labelA;
+        const gh = (COLS - 1) / 2 * pitch + r * 3;
+        for (let c = 0; c < CLUSTERS; c++) {
+          const label = MARKETS[c].toUpperCase().split("").join("\u200A");
+          ctx.fillText(label, centers[c][0] * W, centers[c][1] * H - gh - unit * 0.025);
+        }
+        ctx.globalAlpha = 1;
+      }
 
       const shownCount = Math.min(N, lit);
       counter.textContent = shownCount >= N ? "250+" : String(shownCount);
