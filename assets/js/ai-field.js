@@ -315,21 +315,23 @@
   let zoneDirty = true, visible = !document.hidden, raf = 0, last = 0;
   const t0 = performance.now();
 
+  // Where each bright zone sits in the document, measured on resize and load, so a scroll
+  // frame never has to ask the browser for layout.
+  let zoneBox = [];
+  const measureZones = () => {
+    const sy = window.scrollY;
+    zoneBox = zones.map(el => { const r = el.getBoundingClientRect(); return { top: r.top + sy, bottom: r.bottom + sy }; });
+  };
   const pickZone = () => {
     zoneDirty = false;
-    const vh = window.innerHeight;
+    const vh = window.innerHeight, sy = window.scrollY;
     let covered = 0;
-    for (const el of zones) {
-      const r = el.getBoundingClientRect();
-      covered += Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh;
-    }
+    for (const z of zoneBox) covered += Math.max(0, Math.min(z.bottom - sy, vh) - Math.max(z.top - sy, 0)) / vh;
     energyTarget = FLOOR + (PEAK - FLOOR) * Math.pow(Math.min(1, covered), 2);
   };
   let docMax = 1;
-  const measureProg = () => {
-    docMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    scr = Math.min(1, Math.max(0, window.scrollY / docMax));
-  };
+  const measureDoc = () => { docMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight); measureZones(); };
+  const measureProg = () => { scr = Math.min(1, Math.max(0, window.scrollY / docMax)); };
 
   let drawnAt = 0;
   const draw = (time) => {
@@ -344,7 +346,7 @@
   };
 
   // reduced motion: a single still frame, redrawn when the chapter changes
-  const drawStill = () => { pickZone(); measureProg(); scrShown = scr; energy = energyTarget; draw(6.0); };
+  const drawStill = () => { measureDoc(); pickZone(); measureProg(); scrShown = scr; energy = energyTarget; draw(6.0); };
 
   // Full rate while the page is moving or the scene is the star (title, interlude, close);
   // about 30fps when it is only breathing behind reading text.
@@ -390,9 +392,9 @@
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
       const w = window.innerWidth, h = window.innerHeight;
-      if (w === vw && Math.abs(h - vh) < vh * 0.2) { measureProg(); zoneDirty = true; wake(); return; }
+      if (w === vw && Math.abs(h - vh) < vh * 0.2) { measureDoc(); measureProg(); zoneDirty = true; wake(); return; }
       vw = w; vh = h;
-      resize(); measureProg(); zoneDirty = true; wake();
+      resize(); measureDoc(); measureProg(); zoneDirty = true; wake();
     }, 200);
   });
   window.addEventListener("touchstart", wake, { passive: true });
@@ -413,12 +415,13 @@
     }, { passive: true });
   }
 
+  measureDoc();
   measureProg();
   scrShown = scr;
   gl.uniform1i(u.land, 0);
   resize();
   document.documentElement.classList.add("has-field");
-  const refit = () => { fitGate(); wake(); };
+  const refit = () => { fitGate(); measureDoc(); measureProg(); zoneDirty = true; wake(); };
   window.addEventListener("load", refit);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
   wake();

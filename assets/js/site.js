@@ -6,8 +6,12 @@
      - portrait wipe and parallax
      - margin folio (chapter ticks)
      - expertise tabs, footer year
-   One passive scroll listener, one rAF per frame, geometry measured only on
-   resize. Reduced motion keeps opacity changes and drops every movement.
+   Where the browser supports scroll-driven CSS animations (Chrome, Edge) the
+   movement is declared in CSS and runs off the main thread, so it stays smooth
+   however busy the page is; JS only measures where each animation starts and
+   ends. Elsewhere one passive scroll listener and one rAF per frame drive it.
+   Geometry is measured on resize, never per frame. Reduced motion keeps
+   opacity changes and drops every movement.
    ========================================================================== */
 (() => {
   "use strict";
@@ -17,6 +21,8 @@
   const ease = t => t * t * (3 - 2 * t);
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+  const sd = !reduce && window.CSS && CSS.supports("animation-timeline: scroll()");
+  if (sd) root.classList.add("sd");
 
   /* ------------------------------------------------------ reveal on entry -- */
   // Hidden only once this script is running, so a failure leaves content visible.
@@ -67,9 +73,10 @@
   }) : [];
   const wipe = $("[data-wipe]");
   const parallax = $("[data-parallax]");
+  const parBox = parallax && (parallax.closest("[data-wipe]") || parallax);   // measured on the still frame, not the moving image
 
   let vh = 0, docMax = 1, panTop = 0, panSpan = 1, panTravel = 0, pinTop = 0, pinSpan = 1;
-  let wipeTop = 0, wipeH = 1, parTop = 0, parH = 1;
+  let wipeTop = 0, wipeH = 1, parTop = 0, parH = 1, chTop = [], chBot = [];
   const top = el => el.getBoundingClientRect().top + window.scrollY;
 
   const measure = () => {
@@ -82,7 +89,22 @@
     }
     if (pin) { pinTop = top(pin); pinSpan = Math.max(1, pin.offsetHeight - vh); }
     if (wipe) { wipeTop = top(wipe); wipeH = wipe.offsetHeight; }
-    if (parallax) { parTop = top(parallax); parH = parallax.offsetHeight; }
+    if (parallax) { parTop = top(parBox); parH = parallax.offsetHeight; }
+    chTop = chapters.map(top);
+    chBot = chapters.map((c, i) => chTop[i] + c.offsetHeight);
+    if (sd) publish();
+  };
+
+  // scroll-driven CSS animations take their start and end as pixel offsets
+  const px = (el, a, b) => { el.style.setProperty("--a", `${Math.round(a)}px`); el.style.setProperty("--b", `${Math.round(b)}px`); };
+  const publish = () => {
+    if (rail) {
+      rail.style.setProperty("--pan-x", `${Math.round(panTravel)}px`);
+      px(rail, panTop, panTop + panSpan);
+    }
+    for (const c of cues) px(c.el, pinTop + c.from * pinSpan, pinTop + c.to * pinSpan);
+    if (wipe) px(wipe, wipeTop - vh * 0.92, wipeTop - vh * 0.92 + wipeH * 0.75);
+    if (parallax) px(parallax, parTop - vh * 0.5, parTop + parH);
   };
 
   const RAMP = 0.07;                                   // cue fade length, in act progress
@@ -91,28 +113,30 @@
     frame = 0;
     const y = window.scrollY;
 
-    if (bar) bar.style.transform = `scaleX(${clamp(y / docMax)})`;
+    if (!sd) {
+      if (bar) bar.style.transform = `scaleX(${clamp(y / docMax)})`;
 
-    if (rail) rail.style.transform = reduce || flatRail.matches ? "" : `translate3d(${-clamp((y - panTop) / panSpan) * panTravel}px,0,0)`;
+      if (rail) rail.style.transform = reduce || flatRail.matches ? "" : `translate3d(${-clamp((y - panTop) / panSpan) * panTravel}px,0,0)`;
 
-    if (pin) {
-      const p = clamp((y - pinTop) / pinSpan);
-      for (const c of cues) {
-        const o = ease(clamp(Math.min((p - c.from) / RAMP, (c.to - p) / RAMP)));
-        c.el.style.opacity = o;
-        if (!reduce) c.el.style.transform = `translate3d(0,${(1 - o) * 16}px,0)`;
+      if (pin) {
+        const p = clamp((y - pinTop) / pinSpan);
+        for (const c of cues) {
+          const o = ease(clamp(Math.min((p - c.from) / RAMP, (c.to - p) / RAMP)));
+          c.el.style.opacity = o;
+          if (!reduce) c.el.style.transform = `translate3d(0,${(1 - o) * 16}px,0)`;
+        }
       }
-    }
 
-    if (wipe && !reduce) {
-      // the portrait is uncovered from the bottom as it enters
-      const t = clamp((y + vh * 0.92 - wipeTop) / (wipeH * 0.75));
-      wipe.style.clipPath = `inset(${(1 - ease(t)) * 100}% 0 0 0)`;
-    }
-    if (parallax && !reduce) {
-      // the image drifts inside its frame (the frame is overscaled to cover the travel)
-      const c = clamp((y + vh * 0.5 - parTop) / (parH + vh * 0.5) * 2 - 1, -1, 1);
-      parallax.style.transform = `translate3d(0,${(-c * 28).toFixed(1)}px,0) scale(1.14)`;
+      if (wipe && !reduce) {
+        // the portrait is uncovered from the bottom as it enters
+        const t = clamp((y + vh * 0.92 - wipeTop) / (wipeH * 0.75));
+        wipe.style.clipPath = `inset(${(1 - ease(t)) * 100}% 0 0 0)`;
+      }
+      if (parallax && !reduce) {
+        // the image drifts inside its frame (the frame is overscaled to cover the travel)
+        const c = clamp((y + vh * 0.5 - parTop) / (parH + vh * 0.5) * 2 - 1, -1, 1);
+        parallax.style.transform = `translate3d(0,${(-c * 28).toFixed(1)}px,0) scale(1.14)`;
+      }
     }
 
     folioUpdate();
@@ -128,12 +152,9 @@
   let folioCurrent = -1;
   const folioUpdate = () => {
     if (!folio) return;
-    const mid = vh * 0.5;
+    const mid = window.scrollY + vh * 0.5;
     let hit = -1;
-    for (let i = 0; i < chapters.length; i++) {
-      const r = chapters[i].getBoundingClientRect();
-      if (r.top <= mid && r.bottom > mid) { hit = i; break; }
-    }
+    for (let i = 0; i < chTop.length; i++) if (chTop[i] <= mid && chBot[i] > mid) { hit = i; break; }
     // the career rail slides under the left margin, so the ticks step aside there
     folio.classList.toggle("on", hit >= 0 && chapters[hit].id !== "career");
     if (runhead) runhead.classList.toggle("on", hit >= 0);
@@ -148,6 +169,7 @@
   window.addEventListener("resize", () => { measure(); request(); });
   window.addEventListener("load", () => { measure(); request(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); request(); });
+  if (window.ResizeObserver) new ResizeObserver(() => { measure(); request(); }).observe(document.body);   // late layout shifts (fonts, images)
   measure();
   request();
 

@@ -454,10 +454,30 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
   .path > div { padding-block: var(--s2); }
 }
 
+/* Scroll-driven motion, declared here so the browser runs it off the main thread (Chrome, Edge).
+   site.js adds .sd only where this is supported and measures each --a / --b pixel range. */
+html.sd .progress { animation: sd-bar linear both; animation-timeline: scroll(root); }
+@keyframes sd-bar { to { transform: scaleX(1); } }
+html.sd .rail { animation: sd-pan linear both; animation-timeline: scroll(root); animation-range: var(--a, 0px) var(--b, 1px); }
+@keyframes sd-pan { to { transform: translate3d(calc(var(--pan-x, 0px) * -1), 0, 0); } }
+html.sd .scale__line { animation: sd-cue ease-in-out both; animation-timeline: scroll(root); animation-range: var(--a, 0px) var(--b, 1px); }
+@keyframes sd-cue {
+  0%, 100% { opacity: 0; transform: translate3d(0, 16px, 0); }
+  14%, 86% { opacity: 1; transform: none; }
+}
+html.sd [data-wipe] { animation: sd-wipe ease-in-out both; animation-timeline: scroll(root); animation-range: var(--a, 0px) var(--b, 1px); }
+@keyframes sd-wipe { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
+html.sd [data-parallax] { animation: sd-drift linear both; animation-timeline: scroll(root); animation-range: var(--a, 0px) var(--b, 1px); }
+@keyframes sd-drift {
+  from { transform: translate3d(0, 28px, 0) scale(1.14); }
+  to { transform: translate3d(0, -28px, 0) scale(1.14); }
+}
+
 /* very narrow screens (folded phones): the career cards are too tall to pin, so they stack */
 @media (max-width: 340px) {
   .career { height: auto; padding-block: clamp(3rem, 8vw, 5rem); }
   .career .stage { position: static; height: auto; overflow: visible; }
+  html.sd .rail { animation: none; }
   .rail { display: block; height: auto; will-change: auto; }
   .station, .station--lead, .station--end { flex: none; }
   .station:not(.station--lead, .station--end) { margin-top: var(--s7); }
@@ -469,6 +489,7 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 @media (max-height: 560px) {
   .career { height: auto; padding-block: clamp(3rem, 8vw, 5rem); }
   .career .stage { position: static; height: auto; overflow: visible; }
+  html.sd .rail { animation: none; }
   .rail { display: block; height: auto; will-change: auto; }
   .station, .station--lead, .station--end { flex: none; }
   .station:not(.station--lead, .station--end), .station--low:not(.station--lead) { transform: none; max-width: 40rem; margin-top: var(--s7); padding-block: var(--s5); }
