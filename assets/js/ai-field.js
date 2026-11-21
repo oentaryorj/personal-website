@@ -50,9 +50,9 @@
     uniform vec3  uGate;      // gate centre x (aspect-scaled), centre y, radius
     uniform vec2  uFly;       // how far through the gate (0..1), and distance travelled in screens
 
-    const vec3 cy   = vec3(0.30, 0.88, 1.00);
-    const vec3 ice  = vec3(0.82, 0.96, 1.00);
-    const vec3 warm = vec3(1.00, 0.90, 0.72);
+    const vec3 cy   = vec3(0.56, 0.69, 0.84);
+    const vec3 ice  = vec3(0.84, 0.90, 0.97);
+    const vec3 warm = vec3(0.97, 0.91, 0.80);
 
     float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float ringL(float d, float R, float w){ return smoothstep(w, 0.0, abs(d - R)); }
@@ -294,10 +294,10 @@
       float R = uGate.z;
 
       // ------------------------------------------------------------ space --
-      vec3 col = mix(vec3(0.012, 0.030, 0.072), vec3(0.004, 0.010, 0.032), smoothstep(0.0, 1.0, uv.y));
+      vec3 col = mix(vec3(0.020, 0.023, 0.028), vec3(0.006, 0.007, 0.009), smoothstep(0.0, 1.0, uv.y));
       float d0 = length(p - gc);
-      col += vec3(0.04, 0.26, 0.52) * exp(-d0 / (R * 1.7)) * 0.40;
-      col += vec3(0.10, 0.50, 0.90) * exp(-d0 / (R * 0.55)) * 0.16;
+      col += vec3(0.12, 0.17, 0.24) * exp(-d0 / (R * 1.7)) * 0.40;
+      col += vec3(0.30, 0.42, 0.60) * exp(-d0 / (R * 0.55)) * 0.16;
       vec2 dm = fract(vec2(p.x, uv.y) * 38.0) - 0.5;                       // a faint display surface
       col += cy * smoothstep(0.07, 0.0, length(dm)) * 0.045;
 
@@ -349,7 +349,7 @@
       col += cy * exp(-pow((uv.y - fract(t * 0.07)) * 160.0, 2.0)) * 0.05 * open;
 
       // --------------------------------------------- chapter energy, finish --
-      vec3 wash = mix(vec3(0.020, 0.045, 0.095), vec3(0.008, 0.018, 0.045), uv.y);
+      vec3 wash = mix(vec3(0.030, 0.034, 0.042), vec3(0.010, 0.012, 0.015), uv.y);
       col = mix(wash, col, uEnergy);
       col *= 1.0 - 0.32 * smoothstep(0.45, 1.25, length(uv - vec2(0.5, 0.48)) * 1.5);
       float grain = h21(gl_FragCoord.xy + fract(t) * 91.0) - 0.5;

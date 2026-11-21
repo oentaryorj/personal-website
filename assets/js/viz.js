@@ -19,7 +19,7 @@
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => [...c.querySelectorAll(s)];
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-  const AC = "92,223,255", IC = "191,243,255", WM = "255,230,184";
+  const AC = "143,176,214", IC = "214,228,244", WM = "247,232,204";
   const FONT = getComputedStyle(document.body).fontFamily;
 
   // A canvas that sizes itself to its box and animates only while visible.
