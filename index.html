@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Richard Oentaryo, Ph.D. — AI/ML Leader &amp; Applied Researcher</title>
-<meta name="description" content="Richard Oentaryo, Ph.D. — Head of AI/ML Solutions at DBS. 20+ years bridging AI research and industrial impact across banking, motorsport, and management consulting." />
-<meta name="theme-color" content="#070c16" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Richard Oentaryo, Ph.D. | AI/ML Leader and Applied Researcher</title>
+<meta name="description" content="Richard Oentaryo, Ph.D., Head of AI/ML Solutions at DBS. Twenty years bridging AI research and industrial impact across banking, motorsport, and management consulting." />
+<meta name="theme-color" content="#05070C" />
+<meta name="color-scheme" content="dark" />
 
 <link rel="canonical" href="https://oentaryorj.github.io/personal-website/" />
 <meta property="og:type" content="profile" />
 <meta property="og:url" content="https://oentaryorj.github.io/personal-website/" />
-<meta property="og:title" content="Richard Oentaryo, Ph.D. — AI/ML Leader & Applied Researcher" />
-<meta property="og:description" content="Head of AI/ML Solutions at DBS. 20+ years bridging AI research and industrial impact." />
+<meta property="og:title" content="Richard Oentaryo, Ph.D. | AI/ML Leader and Applied Researcher" />
+<meta property="og:description" content="Head of AI/ML Solutions at DBS. Twenty years bridging AI research and industrial impact." />
 <meta property="og:image" content="https://oentaryorj.github.io/personal-website/assets/img/richard-oentaryo.jpg" />
 <meta property="og:image:width" content="760" />
 <meta property="og:image:height" content="884" />
@@ -22,491 +23,282 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 
 <link rel="stylesheet" href="assets/css/style.css" />
-<script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
 
-<a class="skip-link" href="#top">Skip to content</a>
-<canvas id="stage" aria-hidden="true"></canvas>
-<div class="letterbox" aria-hidden="true"><i></i><i></i></div>
-<div class="atm" aria-hidden="true"></div>
-<div class="scanline" aria-hidden="true"></div>
-<div class="grain"></div>
-<div class="cursor-dot" id="cursorDot"></div>
-<div class="cursor-ring" id="cursorRing"></div>
-<div class="progress-bar" id="progressBar"></div>
+<a class="skip-link" href="#about">Skip to content</a>
+<span class="progress" data-progress></span>
+<canvas id="aiField" class="ai-field" aria-hidden="true"></canvas>
 
-<!-- NAV -->
-<header class="nav" id="nav">
-  <div class="nav-inner">
-    <a href="#top" class="logo" data-cursor="link">
-      <span class="logo-mark">RO</span><span class="logo-dot">.</span>
-    </a>
-    <nav class="nav-links" id="navLinks">
-      <a href="#about" data-cursor="link">About</a>
-      <a href="#experience" data-cursor="link">Experience</a>
-      <a href="#impact" data-cursor="link">Impact</a>
-      <a href="#research" data-cursor="link">Research</a>
-      <a href="#expertise" data-cursor="link">Expertise</a>
-      <a href="#contact" data-cursor="link">Contact</a>
-    </nav>
-    <a class="btn btn-ghost nav-cta" href="https://sg.linkedin.com/in/oentaryo" target="_blank" rel="noopener" data-cursor="link">
-      Let's Connect
-    </a>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</header>
+<!-- Folio: the only chrome. Chapter ticks in the margin, current one named. -->
+<nav class="folio" id="folio" aria-label="Chapters" data-tone="paper" hidden>
+  <ol>
+    <li><a href="#about"><i aria-hidden="true"></i><span><b>I</b> Foundations</span></a></li>
+    <li><a href="#career"><i aria-hidden="true"></i><span><b>II</b> Career</span></a></li>
+    <li><a href="#scale"><i aria-hidden="true"></i><span><b>III</b> Scale</span></a></li>
+    <li><a href="#recognition"><i aria-hidden="true"></i><span><b>IV</b> Recognition</span></a></li>
+    <li><a href="#research"><i aria-hidden="true"></i><span><b>V</b> Research</span></a></li>
+    <li><a href="#craft"><i aria-hidden="true"></i><span><b>VI</b> Craft</span></a></li>
+    <li><a href="#contact"><i aria-hidden="true"></i><span><b>VII</b> Contact</span></a></li>
+  </ol>
+</nav>
 
-<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-  <a href="#about">About</a>
-  <a href="#experience">Experience</a>
-  <a href="#impact">Impact</a>
-  <a href="#research">Research</a>
-  <a href="#expertise">Expertise</a>
-  <a href="#contact">Contact</a>
-</div>
+<main>
 
-<main id="top">
-
-  <!-- HERO -->
-  <section class="hero" id="hero">
-    <canvas id="hero3d" aria-hidden="true"></canvas>
-    <div class="container hero-inner">
-      <p class="eyebrow reveal-up">
-        <span class="dot-pulse"></span>
-        AI &amp; Machine Learning Leadership &nbsp;—&nbsp; Singapore
-      </p>
-
-      <h1 class="hero-title">
-        <span class="reveal-line"><span class="reveal-inner">Richard</span></span>
-        <span class="reveal-line"><span class="reveal-inner"><em>Oentaryo</em></span></span>
+  <!-- TITLE PAGE -->
+  <header class="hero" id="top">
+    <div class="hero__inner">
+      <h1 class="hero__name">
+        <span class="line"><span>Richard</span></span>
+        <span class="line"><span><em>Oentaryo</em></span></span>
       </h1>
+      <hr class="hero__rule rise" style="--d:.7s" />
+      <p class="hero__role rise" style="--d:.8s">Head of AI/ML Solutions, DBS Bank &middot; Singapore</p>
+      <p class="hero__sub rise" style="--d:.9s">Two decades turning frontier research into systems that hold up in production.</p>
+      <a class="cta rise" style="--d:1s" href="#contact">Say hello</a>
+    </div>
+  </header>
 
-      <div class="hero-meta reveal-up" style="--d:.55s">
-        <p class="hero-role">Head of AI/ML Solutions &middot; DBS Bank</p>
-        <p class="hero-creds">
-          <span>Ph.D., NTU</span><i></i><span>ex-QuantumBlack, AI by McKinsey</span><i></i><span>ex-McLaren Applied</span>
+  <!-- INTERTITLE -->
+  <section class="intertitle" aria-label="Interlude">
+    <div class="wrap">
+      <p class="intertitle__line" data-in>A model in production is <em>worth a thousand in a notebook.</em></p>
+    </div>
+  </section>
+
+  <!-- I FOUNDATIONS -->
+  <section class="about" id="about">
+    <div class="wrap about__grid">
+      <figure class="portrait">
+        <div class="portrait__frame" data-wipe>
+          <picture>
+            <source srcset="assets/img/richard-oentaryo.webp" type="image/webp" />
+            <img src="assets/img/richard-oentaryo.jpg" alt="Portrait of Richard Oentaryo" width="760" height="884" loading="lazy" decoding="async" data-parallax />
+          </picture>
+        </div>
+        <figcaption>Richard Oentaryo, Singapore</figcaption>
+      </figure>
+
+      <div class="about__copy stack" data-in data-stagger="80">
+        <h2 class="h-lg">Where deep research meets <em>real-world scale.</em></h2>
+        <p class="lead">A hands-on leader who takes predictive and agentic AI to production at bank scale.</p>
+        <p>At DBS I am Head of AI/ML Solutions for the Consumer Banking Group's Retail Product Pillar. With a team of 7, I own more than 250 contextual marketing models and 6 agentic AI use cases deployed across Singapore, Hong Kong, Taiwan and India, backed by an AI engine with nine-figure economic impact. I also serve as a Deep eXpert for the DBS Innovation Group, exploring causal AI, foundation models and quantum AI.</p>
+        <p>Before DBS I was a Principal Data Scientist at QuantumBlack, AI by McKinsey, and for nearly five years a Lead and Senior Data Scientist at McLaren Applied, bringing F1-grade telemetry analytics to new industries. It began in research: a Ph.D. at NTU, then five years at the Living Analytics Research Centre at SMU.</p>
+        <blockquote class="pull">Across every chapter the throughline has stayed the same: turning rigorous research into systems that create durable, measurable value.</blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- II CAREER (pan) -->
+  <section class="career act" id="career" style="--span:5.4">
+    <div class="stage">
+      <div class="rail" data-pan>
+        <div class="station station--lead">
+          <h2 class="h-lg">Two decades. Four industries. <em>One discipline.</em></h2>
+          <dl class="path">
+            <div><dt>2000</dt><dd>NTU</dd></div>
+            <div><dt>2011</dt><dd>SMU</dd></div>
+            <div><dt>2016</dt><dd>McLaren Applied</dd></div>
+            <div><dt>2021</dt><dd>McKinsey</dd></div>
+            <div><dt>2023</dt><dd>DBS</dd></div>
+          </dl>
+        </div>
+
+        <article class="station">
+          <p class="station__kind">Doctorate</p>
+          <h3>Nanyang Technological University</h3>
+          <p class="station__meta">B.Eng, Ph.D. and Research Fellow, Computer Engineering &middot; 2000 to 2011</p>
+          <p>First Class Honours and the ITMA Gold Medal, then a Ph.D. on an NTU Scholarship. As Research Fellow I invented a sequential neuro-fuzzy learning algorithm for time-series forecasting and predictive maintenance.</p>
+          <ul class="facts"><li>Won the <b>IES Prestigious Engineering Achievement Award</b></li></ul>
+        </article>
+
+        <article class="station station--low">
+          <p class="station__kind">Research</p>
+          <h3>Singapore Management University</h3>
+          <p class="station__meta">Research Scientist, Living Analytics Research Centre &middot; 2011 to 2016</p>
+          <p>Built machine learning for user-response prediction and click-fraud detection, then directed 5 researchers and PhD students on user profiling and recommender systems, turning them into prototypes and demos.</p>
+          <ul class="facts"><li><b>12</b> peer-reviewed papers</li><li>Chaired FDMA 2012 benchmarking: <b>127 teams</b> from 15+ countries</li></ul>
+        </article>
+
+        <article class="station">
+          <p class="station__kind">Motorsport</p>
+          <h3>McLaren Applied</h3>
+          <p class="station__meta">Senior, then Lead Data Scientist, APAC &middot; 2016 to 2021</p>
+          <p>Launched v1 of the McLaren Condition Insight Platform, taking F1-grade telemetry from data ingestion to model deployment and insight reporting, and carried it into the rail sector.</p>
+          <ul class="facts"><li>Fault diagnosis cut <b>from days to hours</b></li><li><b>20+</b> time-series and anomaly-detection algorithms</li></ul>
+        </article>
+
+        <article class="station station--low">
+          <p class="station__kind">Consulting</p>
+          <h3>QuantumBlack, AI by McKinsey</h3>
+          <p class="station__meta">Principal Data Scientist &middot; 2021 to 2023</p>
+          <p>Drove AI/ML and digital transformations across banking, insurance and energy, and led cross-functional teams that bridged R&amp;D and production-grade solutions.</p>
+          <ul class="facts"><li><b>30%</b> lower credit default rates in one engagement</li><li><b>5</b> reusable enterprise assets</li></ul>
+        </article>
+
+        <article class="station station--now">
+          <p class="station__kind">Banking <span>Current</span></p>
+          <h3>DBS Bank</h3>
+          <p class="station__meta">Head of AI/ML Solutions, Retail Product Pillar &middot; 2023 to now</p>
+          <p>Lead a team of 7 and the AI operating model transformation with Regional Product Heads, while spearheading experimentation in causal AI, foundation models and quantum AI.</p>
+          <ul class="facts"><li><b>250+</b> contextual marketing models in four markets</li><li><b>6</b> agentic AI use cases across marketing, mortgage and payments</li></ul>
+        </article>
+        <div class="station station--end" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- III SCALE (peak: pinned canvas, the signature move) -->
+  <section class="scale act" id="scale" style="--span:6.4" data-pin>
+    <div class="stage scale__stage">
+      <div class="scale__copy">
+        <div class="scale__lines">
+          <p class="scale__line" data-cue="-0.07 0.26">A model is a hypothesis <em>until it ships.</em></p>
+          <p class="scale__line" data-cue="0.2 0.5">So the work is making them ship, <em>across four markets.</em></p>
+          <p class="scale__line" data-cue="0.44 0.78">Each point is one model, <em>in production.</em></p>
+          <p class="scale__line" data-cue="0.72 1.07">More than <em>$100M</em> in economic value, every year.</p>
+        </div>
+        <p class="scale__count" role="img" aria-label="More than 250 AI/ML models in production across Singapore, Hong Kong, Taiwan and India">
+          <span class="scale__num" id="modelCount" aria-hidden="true">250+</span>
+          <span class="scale__unit" aria-hidden="true">models in production</span>
         </p>
       </div>
-
-      <p class="hero-lede reveal-up" style="--d:.68s">
-        Two decades turning frontier AI research into measurable business impact — from
-        Formula&nbsp;1 telemetry and management consulting to a portfolio of
-        <strong>250+ production models</strong> at one of Asia's largest banks.
-      </p>
-
-      <div class="hero-cta reveal-up" style="--d:.8s">
-        <a href="#experience" class="btn btn-primary" data-cursor="link">
-          <span>Explore my work</span>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a href="#contact" class="btn btn-outline" data-cursor="link">Get in touch</a>
-      </div>
-
-      <dl class="hero-stats reveal-up" style="--d:.92s">
-        <div class="hstat">
-          <dt class="hstat-num" data-count="250" data-suffix="+">250+</dt>
-          <dd class="hstat-label">AI/ML models<br>in production</dd>
-        </div>
-        <div class="hstat">
-          <dt class="hstat-num" data-count="100" data-prefix="$" data-suffix="M+">$100M+</dt>
-          <dd class="hstat-label">economic value<br>created annually</dd>
-        </div>
-        <div class="hstat">
-          <dt class="hstat-num" data-count="20" data-suffix="+">20+</dt>
-          <dd class="hstat-label">years in AI<br>&amp; data science</dd>
-        </div>
-        <div class="hstat">
-          <dt class="hstat-num" data-count="40" data-suffix="+">40+</dt>
-          <dd class="hstat-label">peer-reviewed<br>publications</dd>
-        </div>
-      </dl>
-    </div>
-
-    <div class="scroll-cue" aria-hidden="true">
-      <span>Scroll</span>
-      <div class="scroll-line"><i></i></div>
+      <canvas id="modelField" class="scale__canvas" aria-hidden="true"></canvas>
     </div>
   </section>
 
-  <!-- MARQUEE -->
-  <div class="marquee-wrap" aria-hidden="true">
-    <div class="marquee">
-      <div class="marquee-track">
-        <span>DBS Bank</span><i>/</i><span>QuantumBlack, AI by McKinsey</span><i>/</i><span>McLaren Applied</span><i>/</i><span>Singapore Management University</span><i>/</i><span>Nanyang Technological University</span><i>/</i>
-        <span>DBS Bank</span><i>/</i><span>QuantumBlack, AI by McKinsey</span><i>/</i><span>McLaren Applied</span><i>/</i><span>Singapore Management University</span><i>/</i><span>Nanyang Technological University</span><i>/</i>
+  <!-- IV RECOGNITION -->
+  <section class="recog" id="recognition">
+    <div class="wrap recog__grid">
+      <div class="recog__head stack" data-in data-stagger="80">
+        <h2 class="h-lg">Recognition earned <em>the hard way.</em></h2>
+        <p class="recog__note">Honours from academia, engineering bodies and industry, across two decades.</p>
       </div>
+      <ol class="ledger" data-in data-stagger="55">
+        <li><span class="yr">2020</span><span class="what">Outstanding M&amp;DSci Contribution <em>at McLaren Applied</em></span></li>
+        <li><span class="yr">2013 to 14</span><span class="what">1st Prize Winner, DSM Sales Forecasting Challenge</span></li>
+        <li><span class="yr">2011</span><span class="what">Prestigious Engineering Achievement Award <em>from the Institution of Engineers Singapore</em></span></li>
+        <li><span class="yr">2009</span><span class="what">IEEE-CIS Outstanding Student Paper Travel Grant</span></li>
+        <li><span class="yr">2006</span><span class="what">Best Session Presentation <em>at the World Congress on Computational Intelligence</em></span></li>
+        <li><span class="yr">2006</span><span class="what">IEEE-CIS Outstanding Student Paper Travel Grant</span></li>
+        <li><span class="yr">2004 to 09</span><span class="what">Nanyang Technological University Ph.D. Scholarship</span></li>
+        <li><span class="yr">2004</span><span class="what">B.Eng, First Class Honours, and ITMA Gold Medal cum Book Prize</span></li>
+      </ol>
     </div>
-  </div>
+  </section>
 
-  <!-- ABOUT -->
-  <section class="section" id="about">
-    <div class="container sec-grid">
-      <aside class="sec-rail">
-        <span class="sec-num">01</span>
-        <span class="sec-label">About</span>
-      </aside>
-
-      <div class="sec-body">
-        <h2 class="sec-title reveal">Where deep research meets <em>real-world scale.</em></h2>
-
-        <div class="about-layout">
-          <div class="about-copy reveal">
-            <p class="lead">
-              I'm an AI/ML leader with two decades spanning academic research, elite
-              motorsport engineering, top-tier management consulting, and enterprise
-              banking at scale.
-            </p>
-            <p>
-              Today I serve as <strong>Head of AI/ML Solutions for the Retail Product Pillar</strong>
-              within DBS's Transformation &amp; Data Group, where I own a regional portfolio of
-              250+ AI/ML models across four markets, generating more than $100M in
-              economic value annually. I also act as a <strong>Deep eXpert for DBS Innovation Group</strong>,
-              spearheading the bank's exploration of frontier technologies including Quantum AI.
-            </p>
-            <p>
-              Before DBS, I was a <strong>Principal Data Scientist at QuantumBlack, AI by
-              McKinsey &amp; Company</strong>, and a <strong>Data Scientist at McLaren Applied</strong>,
-              where I helped build the data science and engineering modules behind McLaren's
-              F1-grade telemetry analytics platform. My path began in academia as a
-              <strong>Research Scientist at Singapore Management University</strong>.
-            </p>
-            <blockquote class="pull-quote">
-              Across every chapter the throughline has stayed the same: turning rigorous
-              research into systems that create durable, measurable value.
-            </blockquote>
-          </div>
-
-          <div class="reveal">
-          <aside class="profile-card tilt">
-            <picture>
-              <source srcset="assets/img/richard-oentaryo.webp" type="image/webp" />
-              <img
-                class="pc-photo"
-                src="assets/img/richard-oentaryo.jpg"
-                alt="Portrait of Richard Oentaryo"
-                width="760" height="884"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
-            <div class="pc-head">
-              <span class="pc-name">Richard Oentaryo</span>
-              <span class="pc-status"><span class="live-dot"></span>Singapore</span>
-            </div>
-            <dl class="pc-list">
-              <div><dt>Role</dt><dd>Head of AI/ML Solutions,<br>Retail Product Pillar — DBS</dd></div>
-              <div><dt>Also</dt><dd>Deep eXpert,<br>DBS Innovation Group</dd></div>
-              <div><dt>Doctorate</dt><dd>Ph.D., Nanyang<br>Technological University</dd></div>
-              <div><dt>Focus</dt><dd>Applied AI · Risk &amp; Fraud<br>Quantum AI · AI Governance</dd></div>
-            </dl>
-          </aside>
-          </div>
+  <!-- V RESEARCH -->
+  <section class="research" id="research">
+    <div class="wrap research__grid">
+      <div class="research__side">
+        <div class="research__sticky stack" data-in data-stagger="80">
+          <h2 class="h-lg">Published work, <em>open-sourced ideas.</em></h2>
+          <p class="papers"><span class="papers__num"><span data-count="40">40</span>+</span><span class="papers__txt">papers, including JMLR, IEEE TSE, AAAI and WSDM</span></p>
+          <ul class="links">
+            <li><a href="https://scholar.google.com/citations?user=OJErfI0AAAAJ&amp;hl=en" target="_blank" rel="noopener"><span>Google Scholar</span><i aria-hidden="true">&#8599;</i></a><small>Full publication list</small></li>
+            <li><a href="https://www.researchgate.net/profile/Richard-Oentaryo-2" target="_blank" rel="noopener"><span>ResearchGate</span><i aria-hidden="true">&#8599;</i></a><small>McLaren Applied, SMU and independent work</small></li>
+            <li><a href="https://github.com/oentaryorj" target="_blank" rel="noopener"><span>GitHub</span><i aria-hidden="true">&#8599;</i></a><small>Open source, including <code>hifm</code> and <code>crossact</code></small></li>
+          </ul>
         </div>
       </div>
+      <ol class="themes">
+        <li data-in>
+          <h3>Hierarchical Factorization Machines</h3>
+          <p>Importance-aware factorization models for large-scale advertising and recommendation systems.</p>
+        </li>
+        <li data-in>
+          <h3>Fraud &amp; Anomaly Detection</h3>
+          <p>Graph- and behaviour-based models for detecting fraudulent activity at banking scale.</p>
+        </li>
+        <li data-in>
+          <h3>Cross-Platform Activity Prediction</h3>
+          <p>Modelling user behaviour across devices and platforms for personalisation at scale.</p>
+        </li>
+        <li data-in>
+          <h3>Causal &amp; DAG Structure Learning</h3>
+          <p>Continuous optimisation approaches to discovering causal structure from data.</p>
+        </li>
+        <li data-in>
+          <h3>Quantum Methods for Credit Risk</h3>
+          <p>Recent work on counterparty credit risk with quantum methods (arXiv, 2026).</p>
+        </li>
+        <li data-in class="service">
+          <h3>Community</h3>
+          <p>Local Chair, CIKM 2017. Program Chair, FDMA 2012.</p>
+        </li>
+      </ol>
     </div>
   </section>
 
-  <!-- EXPERIENCE -->
-  <section class="section section-tint" id="experience">
-    <div class="container sec-grid">
-      <aside class="sec-rail">
-        <span class="sec-num">02</span>
-        <span class="sec-label">Experience</span>
-      </aside>
-
-      <div class="sec-body">
-        <h2 class="sec-title reveal">Two decades. Four industries. <em>One discipline.</em></h2>
-
-        <ol class="timeline">
-          <li class="tl-item reveal">
-            <div class="tl-marker"></div>
-            <div class="tl-card">
-              <div class="tl-top">
-                <h3>Head of AI/ML Solutions, Retail Product Pillar</h3>
-                <span class="tl-date">Current</span>
-              </div>
-              <p class="tl-org">DBS Bank — Transformation &amp; Data Group</p>
-              <p>
-                Own a regional portfolio of 250+ AI/ML models across four markets, generating
-                <strong>more than $100M in economic value annually</strong>. Also serve as Deep eXpert
-                for the DBS Innovation Group, driving exploration into frontier technologies
-                such as Quantum AI.
-              </p>
-              <ul class="tl-tags"><li>AI Strategy</li><li>Banking</li><li>Quantum AI</li><li>Leadership</li></ul>
-            </div>
-          </li>
-
-          <li class="tl-item reveal">
-            <div class="tl-marker"></div>
-            <div class="tl-card">
-              <div class="tl-top">
-                <h3>Principal Data Scientist</h3>
-                <span class="tl-date">Prior</span>
-              </div>
-              <p class="tl-org">QuantumBlack, AI by McKinsey &amp; Company</p>
-              <p>
-                Delivered advanced analytics and machine learning for global clients as part of
-                McKinsey's AI arm, translating complex data science into boardroom-ready
-                strategy and production-grade impact.
-              </p>
-              <ul class="tl-tags"><li>Advanced Analytics</li><li>Consulting</li><li>Applied ML</li></ul>
-            </div>
-          </li>
-
-          <li class="tl-item reveal">
-            <div class="tl-marker"></div>
-            <div class="tl-card">
-              <div class="tl-top">
-                <h3>Data Scientist, APAC</h3>
-                <span class="tl-date">Prior</span>
-              </div>
-              <p class="tl-org">McLaren Applied</p>
-              <p>
-                Built data science and engineering modules for McLaren's telemetry analytics
-                platform — bringing motorsport-grade precision and real-time performance
-                engineering to data products.
-              </p>
-              <ul class="tl-tags"><li>Telemetry</li><li>Real-time Systems</li><li>Motorsport</li></ul>
-            </div>
-          </li>
-
-          <li class="tl-item reveal">
-            <div class="tl-marker"></div>
-            <div class="tl-card">
-              <div class="tl-top">
-                <h3>Research Scientist</h3>
-                <span class="tl-date">Earlier</span>
-              </div>
-              <p class="tl-org">Singapore Management University</p>
-              <p>
-                Led applied research in machine learning — factorization machines for
-                advertising, fraud and anomaly detection, and cross-platform activity
-                prediction — bridging academic rigor and industrial deployment.
-              </p>
-              <ul class="tl-tags"><li>Research</li><li>Factorization Machines</li><li>Fraud Detection</li></ul>
-            </div>
-          </li>
-
-          <li class="tl-item reveal">
-            <div class="tl-marker"></div>
-            <div class="tl-card">
-              <div class="tl-top">
-                <h3>Ph.D., Computer Engineering</h3>
-                <span class="tl-date">2004 — 2009</span>
-              </div>
-              <p class="tl-org">Nanyang Technological University</p>
-              <p>
-                Doctoral research supported by an NTU Ph.D. Scholarship, laying the statistical
-                and machine learning foundations for a career spanning academia and industry.
-              </p>
-              <ul class="tl-tags"><li>Machine Learning</li><li>Ph.D. Scholarship</li></ul>
-            </div>
-          </li>
-        </ol>
+  <!-- VI CRAFT (pointer index) -->
+  <section class="craft" id="craft">
+    <div class="wrap craft__grid">
+      <div class="stack" data-in data-stagger="80">
+        <h2 class="h-lg">The stack behind <em>the strategy.</em></h2>
+        <p class="craft__hint" id="craftHint">Choose a discipline.</p>
       </div>
-    </div>
-  </section>
 
-  <!-- IMPACT -->
-  <section class="section" id="impact">
-    <div class="container sec-grid">
-      <aside class="sec-rail">
-        <span class="sec-num">03</span>
-        <span class="sec-label">Impact</span>
-      </aside>
-
-      <div class="sec-body">
-        <h2 class="sec-title reveal">Recognition earned <em>the hard way.</em></h2>
-
-        <dl class="figures reveal">
-          <div class="fig">
-            <dt class="fig-num is-wide" data-count="100" data-prefix="$" data-suffix="M+">$100M+</dt>
-            <dd>Economic value created annually through models &amp; initiatives led</dd>
-          </div>
-          <div class="fig">
-            <dt class="fig-num" data-count="250" data-suffix="+">250+</dt>
-            <dd>Models live in production, four markets</dd>
-          </div>
-          <div class="fig">
-            <dt class="fig-num" data-count="40" data-suffix="+">40+</dt>
-            <dd>Papers in journals &amp; conferences</dd>
-          </div>
-          <div class="fig">
-            <dt class="fig-num" data-count="20" data-suffix="+">20+</dt>
-            <dd>Years bridging research and execution</dd>
-          </div>
-        </dl>
-
-        <h3 class="sub-head reveal">Awards &amp; Honors</h3>
-        <ul class="awards reveal">
-          <li><span class="aw-year">2013</span><span class="aw-name">1st Prize Winner — DSM Sales Forecasting Challenge, Phase 1</span></li>
-          <li><span class="aw-year">2011</span><span class="aw-name">Prestigious Engineering Achievement Award <em>— Institution of Engineers Singapore</em></span></li>
-          <li><span class="aw-year">2009</span><span class="aw-name">IEEE-CIS Outstanding Student Paper Travel Grant</span></li>
-          <li><span class="aw-year">2006</span><span class="aw-name">Best Session Presentation <em>— World Congress on Computational Intelligence</em></span></li>
-          <li><span class="aw-year">2006</span><span class="aw-name">IEEE-CIS Outstanding Student Paper Travel Grant</span></li>
-          <li><span class="aw-year">2004–09</span><span class="aw-name">Nanyang Technological University Ph.D. Scholarship</span></li>
-          <li><span class="aw-year">2004</span><span class="aw-name">ITMA Gold Medal cum Book Prize</span></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- RESEARCH -->
-  <section class="section section-tint" id="research">
-    <div class="container sec-grid">
-      <aside class="sec-rail">
-        <span class="sec-num">04</span>
-        <span class="sec-label">Research</span>
-      </aside>
-
-      <div class="sec-body">
-        <h2 class="sec-title reveal">Published work, <em>open-sourced ideas.</em></h2>
-
-        <div class="links-row reveal">
-          <a class="link-card" href="https://scholar.google.com/citations?user=OJErfI0AAAAJ&hl=en" target="_blank" rel="noopener" data-cursor="link">
-            <span class="lc-label">Google Scholar</span>
-            <span class="lc-desc">40+ peer-reviewed publications in machine learning, factorization models and applied AI</span>
-            <span class="lc-go" aria-hidden="true">↗</span>
-          </a>
-          <a class="link-card" href="https://www.researchgate.net/profile/Richard-Oentaryo-2" target="_blank" rel="noopener" data-cursor="link">
-            <span class="lc-label">ResearchGate</span>
-            <span class="lc-desc">Contributions spanning McLaren Applied, SMU and independent collaborations</span>
-            <span class="lc-go" aria-hidden="true">↗</span>
-          </a>
-          <a class="link-card" href="https://github.com/oentaryorj" target="_blank" rel="noopener" data-cursor="link">
-            <span class="lc-label">GitHub</span>
-            <span class="lc-desc">Open source including <code>hifm</code> and <code>crossact</code></span>
-            <span class="lc-go" aria-hidden="true">↗</span>
-          </a>
+      <div class="index" id="craftIndex">
+        <div class="index__tabs" role="tablist" aria-label="Disciplines" aria-describedby="craftHint">
+          <button role="tab" id="tab-ai" aria-controls="panel-ai" aria-selected="true" type="button"><span>Applied AI</span><i aria-hidden="true">&#8594;</i></button>
+          <button role="tab" id="tab-ds" aria-controls="panel-ds" aria-selected="false" tabindex="-1" type="button"><span>Data Science</span><i aria-hidden="true">&#8594;</i></button>
+          <button role="tab" id="tab-lead" aria-controls="panel-lead" aria-selected="false" tabindex="-1" type="button"><span>Leadership</span><i aria-hidden="true">&#8594;</i></button>
+          <button role="tab" id="tab-stack" aria-controls="panel-stack" aria-selected="false" tabindex="-1" type="button"><span>Stack</span><i aria-hidden="true">&#8594;</i></button>
         </div>
 
-        <h3 class="sub-head reveal">Principal research themes</h3>
-        <ol class="themes reveal">
-          <li>
-            <span class="th-num">01</span>
-            <div>
-              <h4>Hierarchical Factorization Machines</h4>
-              <p>Importance-aware factorization models for large-scale advertising and recommendation systems.</p>
-            </div>
-          </li>
-          <li>
-            <span class="th-num">02</span>
-            <div>
-              <h4>Fraud &amp; Anomaly Detection</h4>
-              <p>Graph- and behaviour-based models for detecting fraudulent activity at banking scale.</p>
-            </div>
-          </li>
-          <li>
-            <span class="th-num">03</span>
-            <div>
-              <h4>Cross-Platform Activity Prediction</h4>
-              <p>Modelling user behaviour across devices and platforms for personalisation at scale.</p>
-            </div>
-          </li>
-          <li>
-            <span class="th-num">04</span>
-            <div>
-              <h4>Causal &amp; DAG Structure Learning</h4>
-              <p>Continuous optimisation approaches to discovering causal structure from data.</p>
-            </div>
-          </li>
-        </ol>
+        <div class="index__panels">
+          <div role="tabpanel" id="panel-ai" aria-labelledby="tab-ai"><ul>
+            <li>Contextual marketing</li>
+            <li>Predictive ML</li>
+            <li>Agentic AI</li>
+            <li>Causal AI</li>
+            <li>Foundation models</li>
+            <li>Quantum AI <small>emerging</small></li>
+          </ul></div>
+          <div role="tabpanel" id="panel-ds" aria-labelledby="tab-ds"><ul>
+            <li>Recommender systems</li>
+            <li>Time series and anomaly detection</li>
+            <li>Fraud analytics</li>
+            <li>Graph and causal inference</li>
+          </ul></div>
+          <div role="tabpanel" id="panel-lead" aria-labelledby="tab-lead"><ul>
+            <li>AI operating model transformation</li>
+            <li>Cross-market delivery</li>
+            <li>Executive communication</li>
+            <li>Team building and coaching</li>
+            <li>Technical pre-sales</li>
+          </ul></div>
+          <div role="tabpanel" id="panel-stack" aria-labelledby="tab-stack"><ul class="inline">
+            <li>Python</li><li>PySpark</li><li>PyTorch</li><li>LangGraph</li>
+            <li>scikit-learn</li><li>SQL</li><li>Jenkins</li><li>Kubernetes</li><li>Azure DevOps</li>
+          </ul></div>
+        </div>
       </div>
+      <p class="craft__lang">Languages: English, Indonesian.</p>
     </div>
   </section>
 
-  <!-- EXPERTISE -->
-  <section class="section" id="expertise">
-    <div class="container sec-grid">
-      <aside class="sec-rail">
-        <span class="sec-num">05</span>
-        <span class="sec-label">Expertise</span>
-      </aside>
-
-      <div class="sec-body">
-        <h2 class="sec-title reveal">The stack behind <em>the strategy.</em></h2>
-
-        <div class="cap-grid">
-          <section class="cap reveal">
-            <h3>AI &amp; Machine Learning</h3>
-            <ul>
-              <li>Machine Learning &amp; Deep Learning</li>
-              <li>Fraud, Risk &amp; Anomaly Analytics</li>
-              <li>Factorization &amp; Recommender Systems</li>
-              <li>Graph &amp; Causal Inference</li>
-              <li>Quantum AI <span class="cap-tag">emerging</span></li>
-            </ul>
-          </section>
-          <section class="cap reveal">
-            <h3>Leadership &amp; Strategy</h3>
-            <ul>
-              <li>Enterprise AI Strategy &amp; Governance</li>
-              <li>Cross-Market Portfolio Ownership</li>
-              <li>Executive &amp; Board Communication</li>
-              <li>Team Building &amp; Technical Coaching</li>
-              <li>Management Consulting</li>
-            </ul>
-          </section>
-          <section class="cap reveal">
-            <h3>Engineering</h3>
-            <ul class="cap-inline">
-              <li>Python</li><li>Java</li><li>PyTorch</li><li>TensorFlow</li>
-              <li>scikit-learn</li><li>SQL</li><li>Spark</li><li>MLOps</li>
-              <li>Cloud AI</li><li>Data Pipelines</li><li>Experimentation</li><li>Statistical Modelling</li>
-            </ul>
-          </section>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section class="section contact" id="contact">
-    <div class="container">
-      <div class="contact-inner reveal">
-        <span class="sec-label contact-label">06 — Contact</span>
-        <h2 class="contact-title">Always glad to <em>connect.</em></h2>
-        <p class="contact-lede">
-          Reach out to talk AI/ML, applied research, or just to connect professionally.
-        </p>
-        <div class="contact-links">
-          <a href="https://sg.linkedin.com/in/oentaryo" target="_blank" rel="noopener" class="contact-link" data-cursor="link">
-            <span>LinkedIn</span><i aria-hidden="true">↗</i>
-          </a>
-          <a href="https://github.com/oentaryorj" target="_blank" rel="noopener" class="contact-link" data-cursor="link">
-            <span>GitHub</span><i aria-hidden="true">↗</i>
-          </a>
-          <a href="https://scholar.google.com/citations?user=OJErfI0AAAAJ&hl=en" target="_blank" rel="noopener" class="contact-link" data-cursor="link">
-            <span>Google Scholar</span><i aria-hidden="true">↗</i>
-          </a>
-          <a href="https://www.researchgate.net/profile/Richard-Oentaryo-2" target="_blank" rel="noopener" class="contact-link" data-cursor="link">
-            <span>ResearchGate</span><i aria-hidden="true">↗</i>
-          </a>
-        </div>
-      </div>
+  <!-- COLOPHON -->
+  <section class="contact" id="contact">
+    <div class="wrap contact__inner">
+      <h2 class="contact__title" data-in>Always glad <em>to connect.</em></h2>
+      <p class="contact__line" data-in>The best way to <a href="https://sg.linkedin.com/in/oentaryo" target="_blank" rel="noopener">say hello</a> is LinkedIn. My work lives on <a href="https://github.com/oentaryorj" target="_blank" rel="noopener">GitHub</a>, <a href="https://scholar.google.com/citations?user=OJErfI0AAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a> and <a href="https://www.researchgate.net/profile/Richard-Oentaryo-2" target="_blank" rel="noopener">ResearchGate</a>.</p>
+      <a class="cv" href="assets/files/Richard-Oentaryo-CV.pdf" download data-in>Download CV <small>PDF, 65 KB</small></a>
+      <footer class="colophon">
+        <span>&copy; <span id="year">2026</span> Richard Oentaryo</span>
+        <span>Set in Instrument Serif and Geist. Singapore.</span>
+        <a href="#top">Back to top</a>
+      </footer>
     </div>
   </section>
 
 </main>
 
-<footer class="footer">
-  <div class="container footer-inner">
-    <span>&copy; <span id="year">2026</span> Richard Oentaryo</span>
-    <span class="footer-built">Singapore</span>
-  </div>
-</footer>
-
-<button class="to-top" id="toTop" aria-label="Back to top">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-</button>
-
-<script src="assets/js/main.js"></script>
-<script type="module" src="assets/js/three-hero.js"></script>
+<script src="assets/js/ai-field.js" defer></script>
+<script src="assets/js/site.js" defer></script>
+<script src="assets/js/models.js" defer></script>
 </body>
 </html>
