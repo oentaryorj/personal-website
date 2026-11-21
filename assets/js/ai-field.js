@@ -1,13 +1,13 @@
 /* ============================================================================
    AI field: the gateway.
 
-   Raw WebGL, no libraries, no assets. A large ticked gate with a hologram Earth
+   Raw WebGL, no libraries, no assets. A large hairline gate with a hologram Earth
    inside it (the continents as glowing dots from baked Natural Earth data, a
    pillar of light and a spreading ring on each of the five markets) and three
-   tilted orbit rings, framed by console lips.
+   tilted orbit rings.
 
    Scrolling flies you through the gate: the gate swells past the screen and a
-   ribbed corridor of lit panels opens beyond it. The rest of the page travels
+   ribbed corridor opens beyond it. The rest of the page travels
    along that corridor, and the light at its end grows towards the close.
 
    It is brightest on the title, the interlude and the close, and recedes to a
@@ -47,7 +47,7 @@
 
     const vec3 cy   = vec3(0.56, 0.69, 0.84);
     const vec3 ice  = vec3(0.84, 0.90, 0.97);
-    const vec3 warm = vec3(0.97, 0.91, 0.80);
+    const vec3 warm = vec3(0.90, 0.94, 1.00);   // a cool white: the highlight colour
 
     float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float ringL(float d, float R, float w){ return smoothstep(w, 0.0, abs(d - R)); }
@@ -66,24 +66,16 @@
       if (d > R * 1.3) return vec3(0.0);                      // nothing of the gate lives out here
       float a = atan(g.y, g.x);
       float sc = 1.0 + lift * 0.07;                    // it opens a little as you scroll
-            float rot = t * 0.12 + lift * 2.6;
+            float rot = t * 0.08 + lift * 2.6;
             float Rs = R * sc;
             float w = aa * 1.3;
             vec3 gate = vec3(0.0);
             vec3 lineCol = mix(cy, warm, 0.45 * lift);
       
-            // outer bezel: rim, fine ticks, long ticks, heavy arcs, dashed ring
-            gate += cy * ringL(d, Rs, w) * 0.60;
-            float bezel = smoothstep(Rs * 0.952, Rs * 0.958, d) * smoothstep(Rs * 0.986, Rs * 0.980, d);
-            float tk = 1.0 - smoothstep(0.10, 0.16, fract(a * 0.15915494 * 144.0 + rot * 0.8));
-            gate += cy * bezel * tk * 0.55;
-            float bezelL = smoothstep(Rs * 0.925, Rs * 0.931, d) * smoothstep(Rs * 0.986, Rs * 0.980, d);
-            float tkL = 1.0 - smoothstep(0.05, 0.09, fract(a * 0.15915494 * 12.0 + rot * 0.8 / 12.0));
-            gate += ice * bezelL * tkL * 0.75;
-            gate += cy * ringL(d, Rs * 0.885, w * 4.0) * segs(a, 3.0, 0.64, rot * 0.5) * 0.75;
-            gate += cy * ringL(d, Rs * 0.795, w * 1.2) * segs(a, 64.0, 0.46, -rot * 1.3) * 0.55;
-            float mk = smoothstep(0.03, 0.0, abs(sin(a * 2.0))) * smoothstep(Rs * 1.03, Rs * 1.05, d) * smoothstep(Rs * 1.13, Rs * 1.10, d);
-            gate += ice * mk * 0.7;
+            // outer bezel: a rim and two hairline rings, nothing more
+            gate += cy * ringL(d, Rs, w) * 0.55;
+            gate += cy * ringL(d, Rs * 0.955, w) * 0.20;
+            gate += cy * ringL(d, Rs * 0.885, w) * 0.16;
       
             // three orbit rings, tilted in depth: drawn as ellipses, far side dimmer, a satellite on each
             for (int k = 0; k < 3; k++){
@@ -96,10 +88,10 @@
               float de = (length(e) - 1.0) * ro * tilt;                       // approx pixel distance to the ellipse
               float th = atan(e.y, e.x);
               float far = 0.35 + 0.65 * smoothstep(-0.25, 0.25, sin(th));     // near side brighter
-              gate += cy * smoothstep(w * 1.4, 0.0, abs(de)) * far * (0.42 - fk * 0.05);
+              gate += cy * smoothstep(w * 1.4, 0.0, abs(de)) * far * (0.30 - fk * 0.05);
               float sat = t * (0.55 + fk * 0.23) * (mod(fk, 2.0) < 0.5 ? 1.0 : -1.0) + fk * 1.7;
               vec2 sp = vec2(cos(sat) * ro, sin(sat) * ro * tilt);
-              gate += ice * exp(-pow(length(q - sp) / (Rs * 0.018), 2.0)) * (0.5 + 0.5 * smoothstep(-0.2, 0.2, sin(sat))) * 1.1;
+              gate += ice * exp(-pow(length(q - sp) / (Rs * 0.014), 2.0)) * (0.5 + 0.5 * smoothstep(-0.2, 0.2, sin(sat))) * 0.8;
             }
       
             // the globe: Earth drawn as glowing dots, a faint graticule, and a pillar of light on each market
@@ -136,7 +128,7 @@
                 float isLand = step(0.5, texture2D(uLand, vec2(cellLon / 6.2831853 + 0.5, rowLat / 3.14159265 + 0.5)).r);
                 float dotM = smoothstep(stp * 0.30 + wr * 0.5, stp * 0.14, dd);
       
-                gate += lineCol * grat * vis * (0.10 + 0.5 * band);
+                gate += lineCol * grat * vis * (0.06 + 0.35 * band);
                 gate += lineCol * dotM * (1.0 - isLand) * vis * 0.10;
                 gate += mix(lineCol, ice, 0.45) * dotM * isLand * vis * (0.85 + 1.2 * band);
               }
@@ -165,21 +157,6 @@
       return gate;
     }
 
-    vec3 cockpit(vec2 p, vec2 gc, float R, float t, float lift, float asp){
-      float aa = 1.5 / uRes.y;
-      vec3 c = gateArt(p - gc, R, t, lift, aa);
-      float hw = asp * 0.5;
-
-      // the window frame: a console lip across the top and the bottom
-      float lipT = (p.y < 0.95) ? 1.0 : min(seg(p, vec2(-hw + 0.10, 0.972), vec2(hw - 0.10, 0.972)),
-                   min(seg(p, vec2(-hw + 0.10, 0.972), vec2(-hw + 0.03, 1.0)), seg(p, vec2(hw - 0.10, 0.972), vec2(hw - 0.03, 1.0))));
-      float lipB = (p.y > 0.05) ? 1.0 : min(seg(p, vec2(-hw + 0.10, 0.028), vec2(hw - 0.10, 0.028)),
-                   min(seg(p, vec2(-hw + 0.10, 0.028), vec2(-hw + 0.03, 0.0)), seg(p, vec2(hw - 0.10, 0.028), vec2(hw - 0.03, 0.0))));
-      c += cy * smoothstep(aa * 1.5, 0.0, min(lipT, lipB)) * 0.5;
-
-      return c;
-    }
-
     // ------------------------------------------------------------- corridor --
     // What lies beyond the gate: a ribbed corridor of lit panels. Scrolling moves you along it.
     vec3 corridor(vec2 q, float trav, float t, float lift){
@@ -198,18 +175,15 @@
       float cu = fract(s), cv = fract(f);
       float glowCell = 0.0;
       float hv = h21(cell + 7.1);
-      if (hv > 0.80){                                        // a lit panel
-        float flick = 0.55 + 0.45 * sin(t * (0.6 + h21(cell) * 1.4) + h21(cell + 2.0) * 30.0);
+      if (hv > 0.88){                                        // a lit panel, steady
         float box = smoothstep(0.10, 0.20, cu) * smoothstep(0.10, 0.20, 1.0 - cu) * smoothstep(0.16, 0.30, cv) * smoothstep(0.16, 0.30, 1.0 - cv);
-        glowCell = box * flick * 0.85;
-      } else if (hv < 0.07){                                 // a thin data stripe
-        glowCell = smoothstep(0.30, 0.34, cu) * smoothstep(0.30, 0.34, 1.0 - cu) * step(0.46, cv) * step(cv, 0.54) * 0.9;
+        glowCell = box * 0.45;
       }
       float far = smoothstep(0.015, 0.20, r);
       float near = exp(-r * 1.5);
-      vec3 c = (cy * (rib * 0.55 + seam * 0.30) + ice * glowCell) * far * near;
-      float end = 0.13 + 0.14 * smoothstep(0.80, 1.0, uProg);          // the light at the end of it
-      c += mix(cy, warm, 0.25 + 0.6 * lift) * exp(-r / end) * (0.28 + 0.45 * lift);
+      vec3 c = (cy * (rib * 0.42 + seam * 0.22) + ice * glowCell) * far * near;
+      float end = 0.10 + 0.10 * smoothstep(0.80, 1.0, uProg);          // the light at the end of it
+      c += mix(cy, warm, 0.25 + 0.6 * lift) * exp(-r / end) * (0.18 + 0.27 * lift);
       return c;
     }
 
@@ -230,32 +204,17 @@
       float d0 = length(p - gc);
       col += vec3(0.12, 0.17, 0.24) * exp(-d0 / (R * 1.7)) * 0.40;
       col += vec3(0.30, 0.42, 0.60) * exp(-d0 / (R * 0.55)) * 0.16;
-      vec2 dm = fract(vec2(p.x, uv.y) * 38.0) - 0.5;                       // a faint display surface
-      col += cy * smoothstep(0.07, 0.0, length(dm)) * 0.045;
 
       // ----------------------------------------- cockpit, then the corridor --
       float zoom = exp(fly * 3.0);                                          // flying at the gate makes it grow past the screen
       float cockW = 1.0 - smoothstep(0.30, 0.78, fly);
       float corrW = smoothstep(0.22, 0.85, fly);
       vec3 scene = vec3(0.0);
-      if (cockW > 0.001) scene += cockpit(gc + (p - gc) / zoom, gc, R, t, lift, asp) * cockW;
+      if (cockW > 0.001) scene += gateArt((p - gc) / zoom, R, t, lift, aa) * cockW;
       if (corrW > 0.001) scene += corridor(p - gc, uFly.y, t, lift) * corrW;
       float freeM = smoothstep(uFree.x - uFree.z, uFree.x + uFree.z, uv.x) * smoothstep(uFree.y - uFree.z, uFree.y + uFree.z, uv.y);
       scene *= mix(uFree.w, 1.0, freeM);                                    // where the type sits, the scene steps back
       col += scene;
-
-      // ---------------------------------------------------------- glints --
-      float glints = 0.0;
-      for (int k = 0; k < 2; k++){
-        float scl = 24.0 + float(k) * 20.0;
-        vec2 q = vec2(p.x * scl * 0.6, uv.y * scl - t * (0.30 + float(k) * 0.20));
-        vec2 id = floor(q), f = fract(q) - 0.5;
-        float r = h21(id + float(k) * 31.7);
-        vec2 off = (vec2(h21(id + 3.3), h21(id + 8.1)) - 0.5) * 0.6;
-        float tw = 0.5 + 0.5 * sin(t * (0.8 + r * 1.6) + r * 40.0);
-        glints += step(0.90, r) * tw * smoothstep(0.07, 0.0, length(f - off));
-      }
-      col += ice * glints * 0.40;
 
       // --------------------------------------------- chapter energy, finish --
       vec3 wash = mix(vec3(0.030, 0.034, 0.042), vec3(0.010, 0.012, 0.015), uv.y);

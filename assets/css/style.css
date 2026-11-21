@@ -313,7 +313,7 @@ a:hover { text-decoration-color: currentColor; }
 .research__sticky { position: sticky; top: clamp(2rem, 8vh, 5rem); }
 .papers { display: flex; align-items: baseline; gap: var(--s4); margin: var(--s7) 0 0; }
 .papers__num { font-family: var(--font-display); font-size: clamp(3.4rem, 2rem + 4vw, 6rem); line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.papers__txt { max-width: 16rem; font-size: var(--t-sm); line-height: 1.4; color: var(--ink-soft); }
+.papers__txt { max-width: 21rem; font-size: var(--t-sm); line-height: 1.4; color: var(--ink-soft); }
 .links { list-style: none; margin: clamp(2.5rem, 7vh, 5rem) 0 0; padding: 0; border-top: var(--rule); }
 .links li { padding: var(--s4) 0; border-bottom: var(--rule); }
 .links a { display: flex; justify-content: space-between; align-items: baseline; text-decoration: none; font-family: var(--font-display); font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2.3rem); letter-spacing: -0.015em; }
