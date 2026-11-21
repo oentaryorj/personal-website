@@ -1,8 +1,9 @@
 /* ============================================================================
    AI field: one persistent, scroll-driven world behind the whole page.
-   Raw WebGL, no libraries, no assets. A dark volume of neural filaments and
-   node glints with parallax depth, a soft key light, anamorphic streak and
-   film grain. Energy (how bright and busy it is) follows the chapter under the
+   Raw WebGL, no libraries, no assets. A dark neural network: columns of
+   nodes and thin connections on two parallax depth layers, with packets of
+   light travelling along the edges (an inference pass), a soft key light and
+   fine grain. Energy (how bright and busy it is) follows the chapter under the
    reader: loud on the title and interludes, calm behind reading text.
 
    HDR: on displays that report (dynamic-range: high) and browsers that expose
@@ -38,36 +39,59 @@
     uniform float uHdr;      // 0 = SDR tone map, 1 = allow highlights above white
     uniform vec2  uMouse;    // -0.5..0.5
 
-    float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
-    float noise(vec2 p){
-      vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-      return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-                 mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
-    }
-    float fbm(vec2 p){
-      float a = 0.5, s = 0.0;
-      for (int i = 0; i < 4; i++){ s += a * noise(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; }
-      return s;
-    }
+    float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
-    // thin luminous filaments: ridged noise, domain-warped
-    float veins(vec2 p, float t, out float soft){
-      vec2 q = vec2(fbm(p + vec2(0.0, t * 0.035)), fbm(p + vec2(5.2, 1.3) - t * 0.028));
-      float n = fbm(p + 1.15 * q + t * 0.02);
-      float r = 1.0 - abs(n * 2.0 - 1.0);
-      soft = pow(r, 6.0);
-      return pow(r, 34.0);
-    }
+    // Does a node exist at column c, row r, and where is it (world units)?
+    float exists(float c, float r){ return step(0.34, h21(vec2(c, r) * 1.37 + 3.1)); }
+    float rowY(float c, float r, float sp){ return (r + (h21(vec2(r, c) + 8.3) - 0.5) * 0.46) * sp; }
 
-    // node glints: a core, a faint halo, a slow twinkle
-    float nodes(vec2 p, float t){
-      vec2 g = floor(p), f = fract(p) - 0.5;
-      float h = hash(g);
-      vec2 off = (vec2(hash(g + 1.7), hash(g + 9.2)) - 0.5) * 0.62;
-      float d = length(f - off);
-      float on = step(0.62, h);
-      float tw = 0.55 + 0.45 * sin(t * (0.35 + h) + h * 40.0);
-      return (exp(-d * d * 260.0) * 2.4 + exp(-d * d * 30.0) * 0.22) * on * tw;
+    // One network layer: columns of nodes, thin connections, light pulses.
+    //   cs = column spacing, sp = row spacing, lw = line width, k = brightness
+    vec3 network(vec2 w, float t, float cs, float sp, float lw, float k, vec3 tint){
+      float c0 = floor(w.x / cs);
+      float u  = (w.x - c0 * cs) / cs;            // 0..1 across this strip
+      float r0 = floor(w.y / sp);
+      float line = 0.0, pulse = 0.0, node = 0.0, ring = 0.0;
+
+      for (int i = -2; i <= 2; i++){
+        float ri = r0 + float(i);
+        float ei = exists(c0, ri);
+        float yi = rowY(c0, ri, sp);
+
+        // the node itself (left column), and its twin on the right column
+        vec2 pl = vec2(c0 * cs, yi);
+        float dl = length(w - pl);
+        float nr = cs * 0.040;
+        node += ei * (exp(-dl * dl / (nr * nr)) * 1.6 + exp(-dl * dl / (nr * nr * 18.0)) * 0.18);
+        ring += ei * exp(-pow((dl - nr * 2.3) / (nr * 0.22), 2.0)) * 0.30;
+
+        float er = exists(c0 + 1.0, r0 + float(i));
+        float yr = rowY(c0 + 1.0, r0 + float(i), sp);
+        vec2 pr = vec2((c0 + 1.0) * cs, yr);
+        float dr = length(w - pr);
+        node += er * (exp(-dr * dr / (nr * nr)) * 1.6 + exp(-dr * dr / (nr * nr * 18.0)) * 0.18);
+        ring += er * exp(-pow((dr - nr * 2.3) / (nr * 0.22), 2.0)) * 0.30;
+
+        for (int j = -2; j <= 2; j++){
+          float rj = r0 + float(j);
+          float ej = exists(c0 + 1.0, rj);
+          float yj = rowY(c0 + 1.0, rj, sp);
+          float id = h21(vec2(c0 * 5.1 + ri, rj * 3.7 + 1.3));
+          float on = ei * ej * step(0.64, id) * step(abs(float(j - i)), 1.0);
+
+          float slope = (yj - yi) / cs;
+          float d = abs(w.y - (yi + (yj - yi) * u)) / sqrt(1.0 + slope * slope);
+          float l = exp(-d * d / (lw * lw));
+          line += on * l * 0.50;
+
+          // a packet of light travelling along selected connections
+          float live = step(0.70, h21(vec2(id * 91.7, c0 + ri)));
+          float phase = fract(t * (0.10 + 0.08 * id) + id * 7.0);
+          float g = exp(-pow((u - phase) * 4.6, 2.0));
+          pulse += on * live * l * g * 3.2;
+        }
+      }
+      return tint * (line + node + ring) * k + vec3(0.80, 0.93, 1.0) * pulse * k;
     }
 
     void main(){
@@ -77,53 +101,33 @@
       float t = uTime;
       vec2 m = uMouse;
 
-      // ground: near-black with a cold blue key light from the upper right
-      vec3 col = mix(vec3(0.010, 0.014, 0.028), vec3(0.004, 0.006, 0.014), uv.y);
-      float key = exp(-length(p - vec2(0.52 * asp, 0.30)) * 1.5);
-      col += vec3(0.022, 0.050, 0.120) * key;
+      // ground: near-black, a cold key light from the upper right
+      vec3 col = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
+      col += vec3(0.016, 0.040, 0.100) * exp(-length(p - vec2(0.50 * asp, 0.32)) * 1.4);
 
-      // composition: calmer on the left where the type sits
-      float lane = 0.22 + 0.78 * smoothstep(-0.40 * asp, 0.46 * asp, p.x);
+      // calmer on the left where the type sits
+      float lane = 0.30 + 0.70 * smoothstep(-0.36 * asp, 0.40 * asp, p.x);
 
-      float soft; float v;
-      vec3 far  = vec3(0.30, 0.50, 1.00);
-      vec3 mid  = vec3(0.42, 0.70, 1.00);
-      vec3 near = vec3(0.80, 0.92, 1.00);
+      // far layer: small, dim, slow. near layer: larger, brighter, moves more.
+      vec2 wf = p + vec2(t * 0.006, uScroll * 0.32) + m * 0.020 + vec2(3.7, 0.0);
+      col += network(wf, t, 0.34, 0.11, 0.0036, 0.30, vec3(0.30, 0.52, 1.00)) * lane;
 
-      // three depth layers, each moving at its own rate with scroll
-      vec2 p0 = p * 0.95 + vec2( 0.00, uScroll * 0.55) + m * 0.04;
-      v = veins(p0, t, soft);
-      col += far  * (v * 1.0 + soft * 0.035) * lane;
-      col += far * nodes(p * 3.0 + vec2(0.0, uScroll * 0.90) + m * 0.05, t) * 0.55 * lane;
-
-      vec2 p1 = p * 1.6 + vec2(3.7, uScroll * 1.15) + m * 0.09;
-      v = veins(p1, t * 1.15, soft);
-      col += mid  * (v * 1.15 + soft * 0.03) * lane;
-      col += mid * nodes(p * 5.2 + vec2(8.0, uScroll * 1.80) + m * 0.10, t * 1.2) * 0.75 * lane;
-
-      vec2 p2 = p * 2.6 + vec2(9.1, uScroll * 2.10) + m * 0.16;
-      v = veins(p2, t * 1.3, soft);
-      col += near * (v * 0.9) * lane * 0.7;
-      col += near * nodes(p * 7.0 + vec2(2.0, uScroll * 3.20) + m * 0.20, t * 1.4) * 0.9 * lane;
-
-      // anamorphic streak across the key light
-      float sy = p.y - 0.30 - m.y * 0.03;
-      float streak = exp(-abs(sy) * 38.0) * exp(-abs(p.x - 0.30 * asp) * 0.9);
-      col += vec3(0.20, 0.38, 0.95) * streak * 0.20;
+      vec2 wn = p * 0.92 + vec2(t * 0.010, uScroll * 0.80) + m * 0.055;
+      col += network(wn, t * 1.1, 0.62, 0.20, 0.0050, 0.70, vec3(0.46, 0.72, 1.00)) * lane;
 
       col *= uEnergy;
 
       // vignette
-      col *= 1.0 - 0.55 * smoothstep(0.35, 1.25, length(uv - 0.5) * 1.6);
+      col *= 1.0 - 0.50 * smoothstep(0.35, 1.25, length(uv - 0.5) * 1.6);
 
-      // tone map. SDR: soft roll-off to white. HDR: leave headroom for specular.
+      // tone map. SDR: soft roll-off to white. HDR: leave headroom for the pulses.
       vec3 sdr = 1.0 - exp(-col * 1.25);
       vec3 hdr = col / (1.0 + col * 0.10) * 1.35;
       col = mix(sdr, hdr, uHdr);
 
-      // film grain, also dithers banding in the blacks
-      float g = hash(gl_FragCoord.xy + fract(t) * 91.0) - 0.5;
-      col += g * 0.014;
+      // fine grain, also dithers banding in the blacks
+      float g = h21(gl_FragCoord.xy + fract(t) * 91.0) - 0.5;
+      col += g * 0.010;
 
       gl_FragColor = vec4(max(col, 0.0), 1.0);
     }`;

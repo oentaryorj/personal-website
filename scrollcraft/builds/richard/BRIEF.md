@@ -45,3 +45,6 @@ The intertitle (a whole viewport with one sentence) and the colophon are deliber
 
 ## Revision 2: cinematic AI world
 Owner asked for a futuristic, Netflix-like HDR background about AI, kept professional and clean. The paper/ink chapter cuts were replaced by one dark world: a persistent WebGL neural field (assets/js/ai-field.js, no generated assets). Energy follows the chapter: bright on the title and interlude, calm behind reading text, restrained behind the Scatter to Grid peak. Filaments were deliberately thinned and the left (type) side darkened after a first pass read as turbulent plasma. HDR is feature-detected and unverified on real HDR hardware.
+
+## Revision 3: structure over turbulence
+The noise-based filaments still read as turbulent. Replaced with an analytic neural network: two parallax layers of node columns joined by thin connections (neighbouring rows only, so the flow is mostly left to right), with packets of light travelling along selected edges. Same energy-per-chapter logic and HDR path.
