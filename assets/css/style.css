@@ -8,7 +8,6 @@
 
 /* fonts are self-hosted (latin subset): no third-party connection, no layout shift */
 @font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400; font-display: swap; src: url(../fonts/instrument-serif-latin-400-normal.woff2) format("woff2"); }
-@font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap; src: url(../fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); }
 @font-face { font-family: "Geist"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(../fonts/geist-latin-wght-normal.woff2) format("woff2"); }
 
 :root {
@@ -105,10 +104,13 @@ a:hover { text-decoration-color: currentColor; }
 .h-lg {
   margin: 0;
   font-family: var(--font-display); font-weight: 400;
-  font-size: clamp(2.6rem, 1.4rem + 4.6vw, 6rem);
-  line-height: 0.98; letter-spacing: -0.025em; text-wrap: balance;
+  padding-top: var(--s4); border-top: var(--rule);
+  font-size: clamp(2.3rem, 1.3rem + 3.3vw, 4.7rem);
+  line-height: 1.02; letter-spacing: -0.03em; text-wrap: balance;
 }
-.h-lg em, .hero__name em, .intertitle__line em, .contact__title em, .scale__line em { font-style: italic; }
+/* emphasis is tone, not italics: the second clause of a heading is set quieter */
+.h-lg em, .intertitle__line em, .contact__title em, .scale__line em { font-style: normal; color: var(--ink-soft); }
+.hero__name em { font-style: normal; }
 .lead {
   font-family: var(--font-display);
   font-size: clamp(1.45rem, 1.15rem + 1.2vw, 2.1rem);
@@ -218,7 +220,7 @@ a:hover { text-decoration-color: currentColor; }
 }
 .intertitle .wrap { max-width: none; }
 .intertitle__line {
-  margin: 0; max-width: 15ch;
+  margin: 0; max-width: 18ch;
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 0.9rem + 5.6vw, 7.4rem);
   line-height: 0.95; letter-spacing: -0.03em; text-wrap: balance;
@@ -250,7 +252,7 @@ a:hover { text-decoration-color: currentColor; }
 .pull {
   margin: var(--s8) 0 0; padding: var(--s5) 0 0; max-width: 30ch;
   border-top: var(--rule); color: var(--ink);
-  font-family: var(--font-display); font-style: italic;
+  font-family: var(--font-display);
   font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.3rem); line-height: 1.18; letter-spacing: -0.01em; text-wrap: balance;
 }
 
@@ -271,7 +273,7 @@ a:hover { text-decoration-color: currentColor; }
 }
 .station--low:not(.station--lead) { transform: translateY(clamp(1.5rem, 6vh, 4rem)); }
 .station__kind {
-  margin: 0; font-family: var(--font-display); font-style: italic; color: var(--accent);
+  margin: 0; font-family: var(--font-display); color: var(--accent);
   font-size: clamp(2.2rem, 1.5rem + 2.4vw, 3.6rem); line-height: 1; letter-spacing: -0.02em;
 }
 .station--now .station__kind { color: var(--ink); }
@@ -384,7 +386,7 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 .contact { min-height: 100vh; min-height: 100svh; display: flex; align-items: flex-end; padding-block: clamp(5rem, 16vh, 10rem) clamp(1.5rem, 4vw, 3rem); }
 .contact__inner { display: flex; flex-direction: column; }
 .contact__title { margin: 0; max-width: 10ch; font-family: var(--font-display); font-weight: 400; font-size: clamp(3.4rem, 1rem + 11vw, 12rem); line-height: 0.9; letter-spacing: -0.04em; text-wrap: balance; }
-.contact__line { margin: var(--s7) 0 0; max-width: min(36ch, 58vw); font-family: var(--font-display); font-size: clamp(1.4rem, 1.1rem + 1.1vw, 2rem); line-height: 1.28; letter-spacing: -0.01em; color: var(--ink-soft); }
+.contact__line { margin: var(--s7) 0 0; max-width: min(44ch, 62vw); font-family: var(--font-display); font-size: clamp(1.4rem, 1.1rem + 1.1vw, 2rem); line-height: 1.28; letter-spacing: -0.01em; color: var(--ink); }
 .contact__line a { color: var(--ink); text-decoration-color: var(--accent); }
 .contact__line a:hover { color: var(--accent); }
 .cv {
