@@ -415,7 +415,11 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
   .station:not(.station--lead, .station--end), .station--low:not(.station--lead) { transform: none; max-width: 40rem; margin-top: var(--s7); padding-block: var(--s5); }
   .station--end { display: none; }
   .station--lead { max-width: 40rem; }
-  .scale__stage { padding-block: 2.5rem 1rem; }
+  .scale__stage { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: none; padding-block: 2rem 1rem; }
+  .scale__canvas, .scale__copy { grid-row: auto; }
+  .scale__lines { --cue: clamp(1.4rem, 7vh, 2.2rem); }
+  .scale__num { font-size: clamp(3rem, 20vh, 5rem); }
+  .scale__unit { padding-top: var(--s2); }
 }
 
 /* reduced motion: fewer and gentler. Opacity still carries meaning; positions stop moving. */
