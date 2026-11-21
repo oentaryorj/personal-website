@@ -48,3 +48,6 @@ Owner asked for a futuristic, Netflix-like HDR background about AI, kept profess
 
 ## Revision 3: structure over turbulence
 The noise-based filaments still read as turbulent. Replaced with an analytic neural network: two parallax layers of node columns joined by thin connections (neighbouring rows only, so the flow is mostly left to right), with packets of light travelling along selected edges. Same energy-per-chapter logic and HDR path.
+
+## Revision 4: regular shape
+Owner wanted a more regular shape related to AI/ML. The scattered network became a symmetric, fully connected feed-forward diagram (6 evenly spaced layers, 4-6-8-8-6-4) over a faint regular dot matrix. Connection strength varies like trained weights (few strong, most faint); a front of activation sweeps through the layers, and scroll shifts its phase. Faint connections were thinned and the type side dimmed after the first pass competed with the text.

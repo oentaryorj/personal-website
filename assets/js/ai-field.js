@@ -1,9 +1,8 @@
 /* ============================================================================
    AI field: one persistent, scroll-driven world behind the whole page.
-   Raw WebGL, no libraries, no assets. A dark neural network: columns of
-   nodes and thin connections on two parallax depth layers, with packets of
-   light travelling along the edges (an inference pass), a soft key light and
-   fine grain. Energy (how bright and busy it is) follows the chapter under the
+   Raw WebGL, no libraries, no assets. A regular, fully connected feed-forward
+   network (6 evenly spaced layers, widths 4-6-8-8-6-4) over a faint matrix
+   grid, with a front of activation sweeping through it like a forward pass. Energy (how bright and busy it is) follows the chapter under the
    reader: loud on the title and interludes, calm behind reading text.
 
    HDR: on displays that report (dynamic-range: high) and browsers that expose
@@ -41,79 +40,100 @@
 
     float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
-    // Does a node exist at column c, row r, and where is it (world units)?
-    float exists(float c, float r){ return step(0.34, h21(vec2(c, r) * 1.37 + 3.1)); }
-    float rowY(float c, float r, float sp){ return (r + (h21(vec2(r, c) + 8.3) - 0.5) * 0.46) * sp; }
-
-    // One network layer: columns of nodes, thin connections, light pulses.
-    //   cs = column spacing, sp = row spacing, lw = line width, k = brightness
-    vec3 network(vec2 w, float t, float cs, float sp, float lw, float k, vec3 tint){
-      float c0 = floor(w.x / cs);
-      float u  = (w.x - c0 * cs) / cs;            // 0..1 across this strip
-      float r0 = floor(w.y / sp);
-      float line = 0.0, pulse = 0.0, node = 0.0, ring = 0.0;
-
-      for (int i = -2; i <= 2; i++){
-        float ri = r0 + float(i);
-        float ei = exists(c0, ri);
-        float yi = rowY(c0, ri, sp);
-
-        // the node itself (left column), and its twin on the right column
-        vec2 pl = vec2(c0 * cs, yi);
-        float dl = length(w - pl);
-        float nr = cs * 0.040;
-        node += ei * (exp(-dl * dl / (nr * nr)) * 1.6 + exp(-dl * dl / (nr * nr * 18.0)) * 0.18);
-        ring += ei * exp(-pow((dl - nr * 2.3) / (nr * 0.22), 2.0)) * 0.30;
-
-        float er = exists(c0 + 1.0, r0 + float(i));
-        float yr = rowY(c0 + 1.0, r0 + float(i), sp);
-        vec2 pr = vec2((c0 + 1.0) * cs, yr);
-        float dr = length(w - pr);
-        node += er * (exp(-dr * dr / (nr * nr)) * 1.6 + exp(-dr * dr / (nr * nr * 18.0)) * 0.18);
-        ring += er * exp(-pow((dr - nr * 2.3) / (nr * 0.22), 2.0)) * 0.30;
-
-        for (int j = -2; j <= 2; j++){
-          float rj = r0 + float(j);
-          float ej = exists(c0 + 1.0, rj);
-          float yj = rowY(c0 + 1.0, rj, sp);
-          float id = h21(vec2(c0 * 5.1 + ri, rj * 3.7 + 1.3));
-          float on = ei * ej * step(0.64, id) * step(abs(float(j - i)), 1.0);
-
-          float slope = (yj - yi) / cs;
-          float d = abs(w.y - (yi + (yj - yi) * u)) / sqrt(1.0 + slope * slope);
-          float l = exp(-d * d / (lw * lw));
-          line += on * l * 0.50;
-
-          // a packet of light travelling along selected connections
-          float live = step(0.70, h21(vec2(id * 91.7, c0 + ri)));
-          float phase = fract(t * (0.10 + 0.08 * id) + id * 7.0);
-          float g = exp(-pow((u - phase) * 4.6, 2.0));
-          pulse += on * live * l * g * 3.2;
-        }
-      }
-      return tint * (line + node + ring) * k + vec3(0.80, 0.93, 1.0) * pulse * k;
+    // A regular feed-forward network: 6 layers, evenly spaced, fully connected.
+    // Widths 4 - 6 - 8 - 8 - 6 - 4, mirrored about the centre line.
+    float layerN(float l){
+      if (l < 0.5) return 4.0;
+      if (l < 1.5) return 6.0;
+      if (l < 3.5) return 8.0;
+      if (l < 4.5) return 6.0;
+      return 4.0;
     }
+    float nodeY(float l, float k, float sp){ return (k - (layerN(l) - 1.0) * 0.5) * sp; }
 
     void main(){
       float asp = uRes.x / uRes.y;
-      vec2 p = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
       vec2 uv = gl_FragCoord.xy / uRes;
+      vec2 p  = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
       float t = uTime;
-      vec2 m = uMouse;
 
-      // ground: near-black, a cold key light from the upper right
+      // fit the diagram to the screen (portrait phones shrink it to the width)
+      float S = min(1.0, asp * 0.94);
+      vec2 w = p / S + uMouse * vec2(0.020, 0.014);
+      float halfW = 0.50 * asp / S * 0.94;      // half-width of the diagram in its own units
+      float xmin = -halfW, xmax = halfW;
+      float dx = (xmax - xmin) / 5.0;
+      float sp = 0.118;                         // row spacing
+      float lw = 0.0026, nr = 0.0150;
+
+      // the forward pass: a front of activation sweeping through the layers
+      float cycle = 8.2;
+      float f = mod(t * 0.85 + uScroll * 1.6, cycle) - 1.6;
+      float s = (w.x - xmin) / dx;              // position in layer units, 0..5
+
+      // ---- backdrop: a regular matrix of dots (tensor grid) ----
+      vec2 gp = fract(p * 15.0 + uMouse * 0.4) - 0.5;
+      float dots = smoothstep(0.075, 0.0, length(gp));
+      float gl = exp(-pow((p.x / S - xmin) / dx - f, 2.0) * 0.30);
       vec3 col = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
-      col += vec3(0.016, 0.040, 0.100) * exp(-length(p - vec2(0.50 * asp, 0.32)) * 1.4);
+      col += vec3(0.016, 0.040, 0.100) * exp(-length(p - vec2(0.50 * asp, 0.30)) * 1.4);
+      col += vec3(0.22, 0.38, 0.85) * dots * (0.060 + 0.16 * gl);
+
+      // ---- connections between the two layers this pixel sits between ----
+      float lay = clamp(floor(s), 0.0, 4.0);
+      float u = clamp(s - lay, 0.0, 1.0);
+      float inside = step(-0.02, s) * step(s, 5.02);
+      float nl = layerN(lay), nr1 = layerN(lay + 1.0);
+      float line = 0.0, glowLine = 0.0;
+      for (int i = 0; i < 8; i++){
+        float fi = float(i);
+        if (fi < nl){
+          float yi = nodeY(lay, fi, sp);
+          for (int j = 0; j < 8; j++){
+            float fj = float(j);
+            if (fj < nr1){
+              float yj = nodeY(lay + 1.0, fj, sp);
+              float slope = (yj - yi) / dx;
+              float d = abs(w.y - (yi + (yj - yi) * u)) / sqrt(1.0 + slope * slope);
+              float l = exp(-d * d / (lw * lw));
+              float wt = h21(vec2(lay * 17.0 + fi, fj * 5.0 + 2.0));   // the "weight"
+              float strength = 0.035 + 0.55 * wt * wt * wt * wt;
+              float band = exp(-pow((s - f) * 1.15, 2.0));
+              line += l * strength;
+              glowLine += l * strength * band * 3.2;
+            }
+          }
+        }
+      }
+      vec3 lineCol = vec3(0.34, 0.58, 1.00);
+      vec3 hotCol  = vec3(0.80, 0.93, 1.00);
+      col += (lineCol * line * 0.80 + hotCol * glowLine * 0.9) * inside;
+
+      // ---- nodes ----
+      float node = 0.0, ring = 0.0;
+      for (int l = 0; l < 6; l++){
+        float fl = float(l);
+        float nL = layerN(fl);
+        float xl = xmin + dx * fl;
+        float act = exp(-pow((fl - f) * 1.15, 2.0));
+        for (int k = 0; k < 8; k++){
+          float fk = float(k);
+          if (fk < nL){
+            vec2 pos = vec2(xl, nodeY(fl, fk, sp));
+            float d2 = dot(w - pos, w - pos);
+            float a = 0.55 + 1.9 * act;
+            node += exp(-d2 / (nr * nr)) * a + exp(-d2 / (nr * nr * 16.0)) * (0.05 + 0.30 * act);
+            float dd = sqrt(d2);
+            ring += exp(-pow((dd - nr * 2.2) / (nr * 0.22), 2.0)) * (0.16 + 0.45 * act);
+          }
+        }
+      }
+      col += (vec3(0.62, 0.80, 1.00) * node + vec3(0.40, 0.65, 1.00) * ring) * 0.55;
 
       // calmer on the left where the type sits
-      float lane = 0.30 + 0.70 * smoothstep(-0.36 * asp, 0.40 * asp, p.x);
-
-      // far layer: small, dim, slow. near layer: larger, brighter, moves more.
-      vec2 wf = p + vec2(t * 0.006, uScroll * 0.32) + m * 0.020 + vec2(3.7, 0.0);
-      col += network(wf, t, 0.34, 0.11, 0.0036, 0.30, vec3(0.30, 0.52, 1.00)) * lane;
-
-      vec2 wn = p * 0.92 + vec2(t * 0.010, uScroll * 0.80) + m * 0.055;
-      col += network(wn, t * 1.1, 0.62, 0.20, 0.0050, 0.70, vec3(0.46, 0.72, 1.00)) * lane;
+      float lane = 0.24 + 0.76 * smoothstep(-0.30 * asp, 0.38 * asp, p.x);
+      vec3 base = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
+      col = base + (col - base) * lane;
 
       col *= uEnergy;
 
@@ -185,7 +205,7 @@
   /* ------------------------------------------------------------- energy -- */
   // which chapter is under the middle of the screen decides how loud the field is
   const zones = [
-    ["#top", 0.85], [".intertitle", 0.95], ["#about", 0.34], ["#career", 0.48], ["#scale", 0.40],
+    ["#top", 0.80], [".intertitle", 0.85], ["#about", 0.34], ["#career", 0.48], ["#scale", 0.40],
     ["#recognition", 0.30], ["#research", 0.32], ["#craft", 0.32], ["#contact", 0.75]
   ].map(([sel, e]) => [document.querySelector(sel), e]).filter(([el]) => el);
   let energy = 1, energyTarget = 1;

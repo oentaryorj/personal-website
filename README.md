@@ -8,7 +8,7 @@ Dependency-free static site: semantic HTML, hand-written CSS, and vanilla JavaSc
 
 Designed with the [scroll-craft](.claude/skills/scroll-craft) skill as a chaptered editorial page:
 
-- One persistent, scroll-driven WebGL "AI field" behind the whole page (`assets/js/ai-field.js`): a clean neural network (columns of nodes, thin connections, light pulses travelling along them like an inference pass), calmer behind text, brighter on the title and interludes. HDR highlights on HDR displays, SDR tone-mapped elsewhere, CSS gradient if WebGL is unavailable
+- One persistent, scroll-driven WebGL "AI field" behind the whole page (`assets/js/ai-field.js`): a regular, fully connected neural network diagram (6 evenly spaced layers, widths 4-6-8-8-6-4) over a faint matrix grid, with a front of activation sweeping through it like a forward pass, calmer behind text, brighter on the title and interludes. HDR highlights on HDR displays, SDR tone-mapped elsewhere, CSS gradient if WebGL is unavailable
 - Title page, chapters over the field, margin folio of chapter ticks
 - Lateral career rail (scroll-driven pan)
 - Signature move, "Scatter to Grid": 250 points (one per production model) settle into four ordered grids as you scroll, while the count climbs to 250
