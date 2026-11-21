@@ -54,3 +54,26 @@ Owner wanted a more regular shape related to AI/ML. The scattered network became
 
 ## Revision 5: no overlap, CV content
 The diagram is confined to a region (right side on wide screens, a strip above the type on phones) and switched off entirely in every chapter with reading text, the career rail and the peak. Content was extended from the owner's CV: dated roles, real metrics, the four market names (Singapore, Hong Kong, Taiwan, India), the CV tagline as the interlude, honours, stack and community roles. Phone and email from the CV were deliberately not published on the page.
+
+## Revision 6: the gateway
+Owner asked for an entrance to the utopia of artificial intelligence based on the holographic-interface language of the Iron Man films and Jarvis, kept professional and very responsive (after rejecting a bright daybreak and then a twilight landscape). Taken as a mood, not as film artwork: no characters, logos, armour or reactor imagery. The background is a holographic gate of concentric rings above a perspective grid road running to a luminous horizon. Scroll opens the gate and warms the light beyond it (the utopia). Palette: blue-black, hologram cyan, ice white, a little warm white at the horizon. The title page gains four real figures (20 years, 250+ models, 6 agentic use cases, 40+ papers); the interlude states the thesis ("Intelligence, applied well, makes good things abundant"). Tabular and relational foundation models are listed as an emerging topic beside quantum AI. Responsiveness: the gate is placed from measured headline positions on upright screens; render scale adapts to frame rate. Verified in headless Chrome (software GL) at 1920, 1440, 768, 390, 360 and 844x390 landscape with no horizontal overflow; not verified on a real phone or HDR display.
+
+## Revision 7: signature move becomes a map
+Owner disliked the four-grid animation and asked for an Asia map highlighting the four markets. "Scatter to Grid" is replaced by "Asia Lights Up" (assets/js/models.js). Markets confirmed by the owner: Singapore, Hong Kong, Taiwan, India. Owner also did some work in Indonesia during the QuantumBlack years, shown as a quieter hollow highlight labelled "Earlier work" and mentioned on the QuantumBlack card; no per-market figures are shown because none are given. Peak sentence is now: "It's the site where Asia lights up market by market as you scroll." Map data is baked into the file (no runtime fetch, no new dependency). Verified at 1440x900, 768x1024 and 390x844.
+
+## Revision 8: Indonesia is a live market
+Owner asked to add Indonesia. It now lights up as a fifth market on the map (marker on Jakarta, whole country highlighted, linked to Singapore) and the copy says five markets (DBS facts line, scale chapter, count label, about text). The earlier "hollow, earlier work" treatment is removed; the QuantumBlack card still notes engagements in Indonesia.
+
+## Revision 9: deeper into the holographic interface language
+Owner found the flat gate "lame" and asked to borrow more from the Avengers-era Iron Man interfaces. Taken further as a genre, not as artwork (no helmet, armour, reactor, characters, logos or film names): the gate now holds a rotating wireframe globe with a node network and a scan band, three tilted orbit rings with satellites, a pointer-following targeting reticle, a screen scan line and a scroll-tracking edge ruler; hero figures and the portrait frame get glass panels with corner brackets. Readouts only show real figures already on the site. Verified at 1920, 1440, 768, 390, 360 and 844x390; not on a real phone or HDR display.
+
+
+## Revision 10: hologram Earth
+Gate enlarged and the wireframe globe replaced by a dotted hologram Earth facing Asia, with beacons on the five markets (baked Natural Earth land mask). New `uFree` dims the scene where headline type sits.
+
+## Revision 11: the command centre, then the corridor
+Owner supplied a Jarvis-style control-room reference and asked for the background to be an entrance from such a command centre, followed by an animated visualisation of each aspect of the profile, all generated in code. The reference is taken as a genre only: no artwork, layout, text or labels are copied.
+- Feeling curve: awe at the threshold (command centre, hero) > surge (the fly-through, interlude) > calm focus (reading chapters in the corridor) > recognition (each visualisation answering its chapter) > the peak (the Asia map, unchanged, the largest span) > arrival (the light at the corridor's end warms and grows at the close).
+- Background: cockpit (gate, hologram Earth, gauges, leader lines, radar, trace, meters, console lips, edge rulers) that the scroll flies through, then a ribbed corridor whose motion is tied to scroll distance.
+- Visualisations (viz.js, all drawn from the page's own content): career route comet, research constellation lit by the theme on screen, craft orbit driven by the tabs, recognition spine, portrait scan.
+- Layout fix: the research links moved out of the sticky column so the column fits every viewport.
