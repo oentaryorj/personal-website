@@ -1,32 +1,41 @@
 /* ============================================================================
    Richard Oentaryo: chaptered editorial.
    Tokens and devices come from scrollcraft.css. This file is the page itself:
-   two grounds (paper, ink), one accent hue (cobalt, two lightnesses keyed to
-   the ground), two families (Instrument Serif, Geist).
+   one dark world (the AI field behind everything), one accent hue (cobalt),
+   two families (Instrument Serif, Geist).
    ========================================================================== */
 
 :root {
-  --sc-canvas:     #0C0F14;
-  --sc-surface:    #151A22;
-  --sc-ink:        #ECEAE4;
-  --sc-ink-soft:   #A3A8B1;
-  --sc-accent:     #8FA8FF;
-  --sc-accent-ink: #0C0F14;
+  --sc-canvas:     #05070C;
+  --sc-surface:    #0D121C;
+  --sc-ink:        #EEF1F8;
+  --sc-ink-soft:   #AAB2C4;
+  --sc-accent:     #86A6FF;
+  --sc-accent-ink: #05070C;
   --sc-font-display: "Instrument Serif", "Iowan Old Style", "Times New Roman", serif;
   --sc-font-text:    "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --sc-font-mono:    "Geist", system-ui, sans-serif;
   --sc-shadow-color: 220 30% 4%;
 
-  --paper:        #ECEAE4;
-  --paper-ink:    #10131A;
-  --paper-soft:   #4A505B;
-  --paper-accent: #1B3FE0;
   --deep:         #07090D;
 
   --rule: 1px solid var(--sc-hairline-strong);
 }
 
-html { background: #0C0F14; }
+html { background: #05070C; }
+/* wide-gamut accent where the display has it; same hue, more chroma */
+@media (color-gamut: p3) { :root { --sc-accent: color(display-p3 0.52 0.64 1); } }
+@media (dynamic-range: high) and (color-gamut: p3) { :root { --sc-accent: color(display-p3 0.50 0.65 1); } }
+
+/* the persistent AI world. The gradient is the no-WebGL fallback. */
+body {
+  background:
+    radial-gradient(70rem 40rem at 82% -8%, #0B1B44 0%, transparent 62%),
+    radial-gradient(50rem 36rem at 10% 110%, #08122B 0%, transparent 60%),
+    #05070C;
+}
+.ai-field { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; background: #05070C; }
+main { position: relative; z-index: 1; }
 body { font-feature-settings: "ss01", "cv11"; }
 
 .skip-link {
@@ -42,13 +51,10 @@ body { font-feature-settings: "ss01", "cv11"; }
    because colour is inherited as a computed value. */
 .ch {
   position: relative;
-  background: var(--sc-canvas);
+  background: transparent;
   color: var(--sc-ink);
 }
-.ch--ink   { --sc-canvas: #0C0F14; --sc-ink: #ECEAE4; --sc-ink-soft: #A3A8B1; --sc-accent: #8FA8FF; --sc-accent-ink: #0C0F14; --sc-shadow-color: 220 30% 4%; background: var(--sc-canvas); color: var(--sc-ink); }
-.ch--deep  { --sc-canvas: var(--deep); --sc-ink: #ECEAE4; --sc-ink-soft: #A3A8B1; --sc-accent: #8FA8FF; --sc-accent-ink: #0C0F14; background: var(--sc-canvas); color: var(--sc-ink); }
-.ch--paper { --sc-canvas: var(--paper); --sc-ink: var(--paper-ink); --sc-ink-soft: var(--paper-soft); --sc-accent: var(--paper-accent); --sc-accent-ink: #FFFFFF; --sc-shadow-color: 40 8% 40%; background: var(--sc-canvas); color: var(--sc-ink); }
-.ch--paper ::selection { background: var(--paper-accent); color: #fff; }
+.ch--ink { background: transparent; color: var(--sc-ink); }
 
 .h-lg {
   font-family: var(--sc-font-display);
@@ -145,7 +151,7 @@ a:hover { text-decoration-color: currentColor; }
 .about { padding-block: clamp(4.5rem, 10vw, 11rem); }
 .about__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 7vw, 8rem); align-items: start; }
 .portrait { margin: 0; position: sticky; top: clamp(2rem, 8vh, 5rem); }
-.portrait__frame { overflow: hidden; border-radius: var(--sc-r-sm); box-shadow: var(--sc-e3); background: var(--paper-soft); }
+.portrait__frame { overflow: hidden; border-radius: var(--sc-r-sm); background: var(--sc-surface); box-shadow: var(--sc-e3), inset 0 0 0 1px color-mix(in oklab, var(--sc-ink) 10%, transparent); }
 .portrait img { width: 100%; height: auto; aspect-ratio: 760 / 884; object-fit: cover; transform: scale(1.14); }
 .portrait figcaption { margin-top: var(--sc-3); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-ink-soft); }
 .about__copy { max-width: 40rem; padding-top: clamp(0rem, 4vw, 3rem); }
@@ -160,7 +166,7 @@ a:hover { text-decoration-color: currentColor; }
 }
 
 /* ---------------------------------------------------------------- career -- */
-.career [data-sc-stage] { background: var(--sc-canvas); }
+.career [data-sc-stage] { background: transparent; }
 .rail {
   height: 100%;
   align-items: stretch;
@@ -195,7 +201,6 @@ a:hover { text-decoration-color: currentColor; }
   align-items: stretch;
   gap: clamp(1rem, 4vw, 5rem);
   padding: clamp(4.5rem, 12vh, 8rem) var(--sc-gutter) clamp(2rem, 6vh, 4rem);
-  background: var(--sc-canvas);
 }
 .scale__copy { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
 .scale__lines { position: relative; min-height: clamp(11rem, 36vh, 20rem); }
@@ -318,9 +323,8 @@ html:not(.js) .index__panels ul { margin-bottom: var(--sc-7); }
   transform: translateY(-50%);
   opacity: 0; pointer-events: none;
   transition: opacity 300ms var(--sc-ease-out), color 300ms var(--sc-ease-out);
-  color: var(--paper-ink);
+  color: var(--sc-ink);
 }
-.folio[data-tone="ink"] { color: #ECEAE4; }
 .folio.is-on { opacity: 1; pointer-events: auto; }
 .folio ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .15rem; }
 .folio a { display: flex; align-items: center; gap: .7rem; text-decoration: none; padding: .35rem .5rem .35rem 0; font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; }

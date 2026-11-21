@@ -133,7 +133,12 @@
         const on = i < lit;
         ctx.beginPath();
         ctx.arc(x, y, on ? r * 1.08 : r * 0.78, 0, Math.PI * 2);
-        if (on) { ctx.globalAlpha = 1; ctx.fillStyle = accent; ctx.fill(); }
+        if (on) {
+          // soft bloom under the lit point, then the bright core
+          ctx.globalAlpha = 0.14; ctx.fillStyle = accent;
+          ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(x, y, r * 1.08, 0, Math.PI * 2); ctx.fill();
+        }
         else { ctx.globalAlpha = 0.55; ctx.strokeStyle = inkSoft; ctx.lineWidth = 1; ctx.stroke(); }
       }
       ctx.globalAlpha = 1;

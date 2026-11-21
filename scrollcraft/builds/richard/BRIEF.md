@@ -42,3 +42,6 @@ Bespoke canvas in `assets/js/main.js` (not an engine parameter). 250 points, one
 
 ## Authored silence
 The intertitle (a whole viewport with one sentence) and the colophon are deliberate stillness, not dead scroll.
+
+## Revision 2: cinematic AI world
+Owner asked for a futuristic, Netflix-like HDR background about AI, kept professional and clean. The paper/ink chapter cuts were replaced by one dark world: a persistent WebGL neural field (assets/js/ai-field.js, no generated assets). Energy follows the chapter: bright on the title and interlude, calm behind reading text, restrained behind the Scatter to Grid peak. Filaments were deliberately thinned and the left (type) side darkened after a first pass read as turbulent plasma. HDR is feature-detected and unverified on real HDR hardware.
