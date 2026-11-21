@@ -115,7 +115,7 @@
   ];
   const LINKS = [[3, 0], [0, 1], [1, 2], [3, 1], [0, 4]];        // India-Singapore, Singapore-Hong Kong, Hong Kong-Taiwan, India-Hong Kong, Singapore-Indonesia
 
-  let W = 1, H = 1, accent = "#5CDFFF", soft = "#9DB4CB", glow = "#BFF3FF", canvasBg = "#030814";
+  let W = 1, H = 1, accent = "#D6B27A", soft = "#A89E8E", glow = "#F2DDB4", canvasBg = "#0C0B0A";
   let ox = 0, oy = 0, S = 1, shown = -1, onScreen = true, raf = 0;
   const resize = () => {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
