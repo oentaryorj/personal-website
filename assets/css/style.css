@@ -12,13 +12,13 @@
 @font-face { font-family: "Geist"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(../fonts/geist-latin-wght-normal.woff2) format("woff2"); }
 
 :root {
-  --canvas: #0C0B0A;
-  --surface: #181511;
-  --ink: #F3EDE2;
-  --ink-soft: #A89E8E;
-  --accent: #D6B27A;
-  --accent-ink: #15100A;
-  --glow: #F2DDB4;
+  --canvas: #0B0D10;
+  --surface: #151A20;
+  --ink: #ECEFF3;
+  --ink-soft: #98A2AE;
+  --accent: #8FB0D6;
+  --accent-ink: #0A1018;
+  --glow: #D6E4F4;
   --hair: color-mix(in oklab, var(--ink) 12%, transparent);
   --hair-strong: color-mix(in oklab, var(--ink) 22%, transparent);
 
@@ -38,7 +38,7 @@
   --r-sm: 6px; --r-md: 12px; --r-pill: 999px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --d-fast: 160ms;
-  --shadow: 0 4px 8px hsl(30 20% 2% / 0.35), 0 18px 40px -8px hsl(30 20% 2% / 0.5), 0 48px 90px -24px hsl(30 20% 2% / 0.45);
+  --shadow: 0 4px 8px hsl(215 15% 2% / 0.35), 0 18px 40px -8px hsl(215 15% 2% / 0.5), 0 48px 90px -24px hsl(215 15% 2% / 0.45);
 
   /* side padding, grown on notched phones in landscape */
   --pad: max(clamp(1.25rem, 5vw, 5.5rem), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
@@ -54,7 +54,7 @@
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; background: var(--canvas); color-scheme: dark; }
 body {
   margin: 0;
-  background: linear-gradient(180deg, #0C0B0A 0%, #14110E 100%) fixed, var(--canvas);
+  background: linear-gradient(180deg, #0B0D10 0%, #11151A 100%) fixed, var(--canvas);
   color: var(--ink);
   font-family: var(--font-text);
   font-size: var(--t-base);
