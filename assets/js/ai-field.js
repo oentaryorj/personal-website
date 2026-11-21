@@ -1,29 +1,34 @@
 /* ============================================================================
-   AI field: one persistent, scroll-driven world behind the whole page.
-   Raw WebGL, no libraries, no assets. A regular, fully connected feed-forward
-   network (6 evenly spaced layers, widths 4-6-8-8-6-4) over a faint matrix
-   grid, with a front of activation sweeping through it like a forward pass. Energy (how bright and busy it is) follows the chapter under the
-   reader: loud on the title and interludes, calm behind reading text.
+   AI field: a transformer, drawn as a self-attention matrix.
 
-   HDR: on displays that report (dynamic-range: high) and browsers that expose
-   canvas HDR, highlights are allowed above SDR white. Everywhere else the same
-   scene is tone-mapped into SDR with a soft highlight roll-off. Feature-
-   detected and wrapped; a failure falls back to SDR, then to the CSS gradient.
+   Raw WebGL, no libraries, no assets. A causal attention map (tokens on both
+   axes, the upper triangle masked, an attention sink on the first token) in a
+   stacked deck of layers. An autoregressive pass fills the matrix one row at a
+   time: each new token attends back across the keys, then joins the sequence.
+   Scrolling advances which attention head is shown.
+
+   The diagram only ever lives in empty space (see REGION) and is switched off,
+   with the loop stopped, in every chapter that carries reading text.
+
+   HDR: on displays that report (dynamic-range: high), in browsers that expose
+   canvas HDR, highlights may exceed SDR white. Feature-detected and guarded;
+   anything that fails falls back to SDR, then to the CSS gradient.
    ========================================================================== */
 (() => {
   "use strict";
   const canvas = document.getElementById("aiField");
   if (!canvas) return;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const small = window.matchMedia("(max-width: 860px)").matches;
-  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
-  let gl = null;
-  try {
-    gl = canvas.getContext("webgl2", { alpha: false, antialias: false, powerPreference: "high-performance" })
-      || canvas.getContext("webgl", { alpha: false, antialias: false, powerPreference: "high-performance" });
-  } catch (e) { gl = null; }
-  if (!gl) return;                       // CSS gradient stays as the fallback
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const stripMQ = window.matchMedia("(max-width: 860px) and (orientation: portrait)");   // phones held upright
+  const compactMQ = window.matchMedia("(max-width: 860px), (max-height: 560px)");        // lighter render
+
+  const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, powerPreference: "high-performance" })
+    || canvas.getContext("webgl", { alpha: false, antialias: false, powerPreference: "high-performance" });
+  if (!gl) return;                                  // the CSS gradient stays as the fallback
+
+  const ROW_SECONDS = 0.5;                          // time to generate one token
+  let tokens = 12, maxScale = 0.9, disabled = false;
 
   const VERT = `
     attribute vec2 aPos;
@@ -34,249 +39,289 @@
     uniform vec2  uRes;
     uniform float uTime;
     uniform float uScroll;   // scroll position in viewport heights
-    uniform float uEnergy;   // 0..1.2, follows the chapter
+    uniform float uEnergy;   // 0..1, follows the chapter
     uniform float uHdr;      // 0 = SDR tone map, 1 = allow highlights above white
     uniform vec2  uMouse;    // -0.5..0.5
-    uniform vec4  uRegion;   // x0,y0,x1,y1 in 0..1 (y up): the only place the diagram may live
+    uniform vec4  uRegion;
+    uniform float uN;        // tokens per side
+    uniform float uRowSec;
+    uniform float uCycle;
 
     float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
-    // A regular feed-forward network: 6 layers, evenly spaced, fully connected.
-    // Widths 4 - 6 - 8 - 8 - 6 - 4, mirrored about the centre line.
-    float layerN(float l){
-      if (l < 0.5) return 4.0;
-      if (l < 1.5) return 6.0;
-      if (l < 3.5) return 8.0;
-      if (l < 4.5) return 6.0;
-      return 4.0;
+    float sdBox(vec2 p, vec2 b, float r){
+      vec2 q = abs(p) - b + r;
+      return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
     }
-    float nodeY(float l, float k, float sp){ return (k - (layerN(l) - 1.0) * 0.5) * sp; }
+
+    // attention weight of query i on key j: local, a sink on token 0, a few
+    // long-range spikes. Causal: nothing above the diagonal.
+    float attn(float i, float j, float seed){
+      float d = i - j;
+      float local = exp(-d * 0.75) * 0.85;
+      float sink  = step(j, 0.5) * 0.5;
+      float spike = step(0.85, h21(vec2(i, j) + seed * 7.13)) * 0.8;
+      return (local + sink + spike) * step(0.0, d);
+    }
+    float head(float i, float j, float s){
+      float s0 = floor(s);
+      return mix(attn(i, j, s0), attn(i, j, s0 + 1.0), smoothstep(0.3, 0.7, fract(s)));
+    }
+
+    // one attention matrix. front = 1 runs the autoregressive pass; the layers
+    // behind it are drawn complete and dim.
+    vec3 matrixLayer(vec2 g, float aa, float seed, float front, float cyc, float cur){
+      vec2 id = floor(g);
+      vec2 f = fract(g) - 0.5;
+      float i = uN - 1.0 - id.y;
+      float j = id.x;
+      float cell = smoothstep(aa, -aa, sdBox(f, vec2(0.40), 0.12));
+      float a = head(i, j, seed);
+
+      float done = mix(1.0, step(i + 0.5, cur), front);
+      float act  = front * step(abs(i - cur), 0.5);
+      float sweep = fract(cyc) * (i + 1.0);
+      float lit = act * step(j, sweep);
+
+      float v = a * (done * 0.72 + lit * 1.55);
+      v += act * step(abs(i - j), 0.5) * 0.55;                      // the query token itself
+      float live = step(j, i + 0.5);
+      vec3 cool = vec3(0.34, 0.58, 1.00);
+      vec3 hot  = vec3(0.85, 0.95, 1.00);
+      vec3 col = mix(cool, hot, clamp(v - 0.55, 0.0, 1.0)) * v * cell;
+      col += cool * cell * (0.065 * live + 0.022 * (1.0 - live));    // empty cell and masked cell
+      return col;
+    }
+
+    // a token: a short bar, lit once it exists, brightest while it is the newest
+    float tokenBar(vec2 p, float len){ return smoothstep(0.02, -0.02, sdBox(p, vec2(len, 0.075), 0.07)); }
 
     void main(){
       vec2 uv = gl_FragCoord.xy / uRes;
-      float t = uTime;
-
-      // the diagram is fitted into its region, never the whole screen
-      vec2 rc = vec2(uRegion.x + uRegion.z, uRegion.y + uRegion.w) * 0.5;
-      vec2 rs = vec2(uRegion.z - uRegion.x, uRegion.w - uRegion.y) * uRes;   // pixels
-      float k = min(rs.x / 1.30, rs.y / 1.15);                               // pixels per design unit
-      vec2 w = (gl_FragCoord.xy - rc * uRes) / k + uMouse * vec2(0.020, 0.014);
-      vec2 q = (gl_FragCoord.xy - rc * uRes) / (rs * 0.5);                   // -1..1 inside the region
-      float inReg = smoothstep(1.0, 0.74, abs(q.x)) * smoothstep(1.0, 0.74, abs(q.y));
-      float radial = 1.0 - smoothstep(0.50, 1.0, length(q));
-
-      float xmin = -0.5, xmax = 0.5;
-      float dx = (xmax - xmin) / 5.0;
-      float sp = 0.118;                         // row spacing
-      float lw = 1.7 / k, nr = 0.030;
-
-      // the forward pass: a front of activation sweeping through the layers
-      float cycle = 8.2;
-      float f = mod(t * 0.85 + uScroll * 1.6, cycle) - 1.6;
-      float s = (w.x - xmin) / dx;              // position in layer units, 0..5
-
-      // ---- backdrop: a regular matrix of dots (tensor grid) ----
-      vec2 gp = fract(w * 9.0 + uMouse * 0.2) - 0.5;
-      float dots = smoothstep(0.075, 0.0, length(gp));
-      float gl = exp(-pow(s - f, 2.0) * 0.30);
       vec3 base = mix(vec3(0.008, 0.012, 0.026), vec3(0.003, 0.005, 0.012), uv.y);
-      vec3 col = base;
+
+      vec2 rc = vec2(uRegion.x + uRegion.z, uRegion.y + uRegion.w) * 0.5;
+      vec2 rs = vec2(uRegion.z - uRegion.x, uRegion.w - uRegion.y) * uRes;
+      vec2 q = (gl_FragCoord.xy - rc * uRes) / (rs * 0.5);                 // -1..1 inside the region
+      if (abs(q.x) > 1.0 || abs(q.y) > 1.0){ gl_FragColor = vec4(base, 1.0); return; }
+
+      float k = min(rs.x / 1.40, rs.y / 1.30);                              // pixels per design unit
+      // the matrix is 1 x 1; the axes and the deck extend it, so centre the whole
+      vec2 w = (gl_FragCoord.xy - rc * uRes) / k + vec2(-0.02, 0.075);
+      float aa = uN / k * 0.75;
+
+      float cyc = uTime / uRowSec;
+      float phase = mod(cyc, uCycle);
+      float cur = floor(phase);
+      float fade = 1.0 - smoothstep(uN + 3.0, uN + 4.6, phase);
+      float seed = uScroll * 0.7;
+
+      vec3 col = vec3(0.0);
+      vec2 g = (w + 0.5) * uN;                                              // matrix cells, 0..N
+      float inFront = step(0.0, g.x) * step(g.x, uN) * step(0.0, g.y) * step(g.y, uN);
+
+      if (inFront > 0.5){
+        col += matrixLayer(g, aa, seed, 1.0, cyc, cur) * fade;
+      } else {
+        // the deck behind: two more layers peeking out above and to the right
+        for (int l = 1; l <= 2; l++){
+          float fl = float(l);
+          vec2 off = vec2(0.055, 0.055) * fl + uMouse * 0.012 * fl;
+          vec2 gb = (w - off + 0.5) * uN;
+          float inB = step(0.0, gb.x) * step(gb.x, uN) * step(0.0, gb.y) * step(gb.y, uN);
+          if (inB > 0.5) col += matrixLayer(gb, aa, seed + 17.0 * fl, 0.0, cyc, cur) * (0.34 / fl);
+        }
+      }
+
+      // token axes: left (queries) and top (keys)
+      if (g.y >= 0.0 && g.y <= uN && g.x < -0.1 && g.x > -2.2){
+        float i = uN - 1.0 - floor(g.y);
+        float len = 0.20 + 0.70 * h21(vec2(i, 3.1));
+        float bar = tokenBar(vec2(g.x + 0.2 + len, fract(g.y) - 0.5), len);
+        float exists = step(i, cur);
+        float newest = step(abs(i - cur), 0.5);
+        col += mix(vec3(0.34, 0.58, 1.0), vec3(0.85, 0.95, 1.0), newest) * bar * (0.10 + 0.40 * exists + 0.5 * newest) * fade;
+      }
+      if (g.x >= 0.0 && g.x <= uN && g.y > uN + 0.1 && g.y < uN + 2.2){
+        float j = floor(g.x);
+        float len = 0.20 + 0.70 * h21(vec2(j, 9.7));
+        float bar = tokenBar(vec2(g.y - uN - 0.2 - len, fract(g.x) - 0.5), len);
+        float exists = step(j, cur);
+        float newest = step(abs(j - cur), 0.5);
+        col += mix(vec3(0.34, 0.58, 1.0), vec3(0.85, 0.95, 1.0), newest) * bar * (0.10 + 0.40 * exists + 0.5 * newest) * fade;
+      }
+
+      // soft wash behind the diagram, then fade the region's edge to nothing
+      float edge = smoothstep(1.0, 0.74, abs(q.x)) * smoothstep(1.0, 0.74, abs(q.y));
       col += vec3(0.016, 0.040, 0.100) * exp(-dot(q, q) * 3.2) * 1.2;
-      col += vec3(0.22, 0.38, 0.85) * dots * radial * (0.060 + 0.16 * gl);
+      col = base + col * edge;
 
-      // ---- connections between the two layers this pixel sits between ----
-      float lay = clamp(floor(s), 0.0, 4.0);
-      float u = clamp(s - lay, 0.0, 1.0);
-      float inside = step(-0.02, s) * step(s, 5.02);
-      float nl = layerN(lay), nr1 = layerN(lay + 1.0);
-      float line = 0.0, glowLine = 0.0;
-      for (int i = 0; i < 8; i++){
-        float fi = float(i);
-        if (fi < nl){
-          float yi = nodeY(lay, fi, sp);
-          for (int j = 0; j < 8; j++){
-            float fj = float(j);
-            if (fj < nr1){
-              float yj = nodeY(lay + 1.0, fj, sp);
-              float slope = (yj - yi) / dx;
-              float d = abs(w.y - (yi + (yj - yi) * u)) / sqrt(1.0 + slope * slope);
-              float l = exp(-d * d / (lw * lw));
-              float wt = h21(vec2(lay * 17.0 + fi, fj * 5.0 + 2.0));   // the "weight"
-              float strength = 0.035 + 0.55 * wt * wt * wt * wt;
-              float band = exp(-pow((s - f) * 1.15, 2.0));
-              line += l * strength;
-              glowLine += l * strength * band * 3.2;
-            }
-          }
-        }
-      }
-      vec3 lineCol = vec3(0.34, 0.58, 1.00);
-      vec3 hotCol  = vec3(0.80, 0.93, 1.00);
-      col += (lineCol * line * 0.80 + hotCol * glowLine * 0.9) * inside;
-
-      // ---- nodes ----
-      float node = 0.0, ring = 0.0;
-      for (int l = 0; l < 6; l++){
-        float fl = float(l);
-        float nL = layerN(fl);
-        float xl = xmin + dx * fl;
-        float act = exp(-pow((fl - f) * 1.15, 2.0));
-        for (int k = 0; k < 8; k++){
-          float fk = float(k);
-          if (fk < nL){
-            vec2 pos = vec2(xl, nodeY(fl, fk, sp));
-            float d2 = dot(w - pos, w - pos);
-            float a = 0.55 + 1.9 * act;
-            node += exp(-d2 / (nr * nr)) * a + exp(-d2 / (nr * nr * 16.0)) * (0.05 + 0.30 * act);
-            float dd = sqrt(d2);
-            ring += exp(-pow((dd - nr * 2.2) / (nr * 0.22), 2.0)) * (0.16 + 0.45 * act);
-          }
-        }
-      }
-      col += (vec3(0.62, 0.80, 1.00) * node + vec3(0.40, 0.65, 1.00) * ring) * 0.55;
-
-      // nothing outside the region: the type area stays clean
-      col = base + (col - base) * inReg;
-
-      col *= uEnergy;
-
-      // vignette
+      col = base + (col - base) * uEnergy;
       col *= 1.0 - 0.35 * smoothstep(0.35, 1.25, length(uv - 0.5) * 1.6);
 
-      // tone map. SDR: soft roll-off to white. HDR: leave headroom for the pulses.
       vec3 sdr = 1.0 - exp(-col * 1.25);
       vec3 hdr = col / (1.0 + col * 0.10) * 1.35;
       col = mix(sdr, hdr, uHdr);
 
-      // fine grain, also dithers banding in the blacks
-      float g = h21(gl_FragCoord.xy + fract(t) * 91.0) - 0.5;
-      col += g * 0.010;
-
-      gl_FragColor = vec4(max(col, 0.0), 1.0);
+      float grain = h21(gl_FragCoord.xy + fract(uTime) * 91.0) - 0.5;
+      gl_FragColor = vec4(max(col + grain * 0.010, 0.0), 1.0);
     }`;
 
   const compile = (type, src) => {
-    const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(s)); return null; }
     return s;
   };
   const vs = compile(gl.VERTEX_SHADER, VERT), fs = compile(gl.FRAGMENT_SHADER, FRAG);
   if (!vs || !fs) return;
   const prog = gl.createProgram();
-  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.warn(gl.getProgramInfoLog(prog)); return; }
   gl.useProgram(prog);
 
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, "aPos");
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
   const U = n => gl.getUniformLocation(prog, n);
-  const uRes = U("uRes"), uTime = U("uTime"), uScroll = U("uScroll"), uEnergy = U("uEnergy"), uHdr = U("uHdr"), uMouse = U("uMouse"), uRegion = U("uRegion");
+  const $ = sel => document.querySelector(sel);
+  const u = {
+    res: U("uRes"), time: U("uTime"), scroll: U("uScroll"), energy: U("uEnergy"), hdr: U("uHdr"), mouse: U("uMouse"),
+    region: U("uRegion"), n: U("uN"), cycle: U("uCycle")
+  };
+  gl.uniform1f(U("uRowSec"), ROW_SECONDS);
+
+  // Where the diagram may live (x0,y0,x1,y1 in 0..1, y up) and how detailed it is.
+  // Upright phones get a strip above the type, if the screen is tall enough to have one;
+  // everything else gets the empty right side. Recomputed on resize and rotation.
+  const layout = () => {
+    const strip = stripMQ.matches;
+    tokens = compactMQ.matches ? 10 : 12;
+    maxScale = compactMQ.matches ? 0.75 : 0.9;
+    disabled = strip && window.innerHeight < 600;
+    const r = strip ? [0.0, 0.76, 1.0, 0.99] : [0.62, 0.07, 0.99, 0.93];
+    gl.uniform4f(u.region, r[0], r[1], r[2], r[3]);
+    gl.uniform1f(u.n, tokens);
+    gl.uniform1f(u.cycle, tokens + 5);               // fill, hold, fade
+  };
 
   /* ---------------------------------------------------- HDR, best effort -- */
   let hdr = 0;
-  const wantHdr = window.matchMedia && window.matchMedia("(dynamic-range: high)").matches;
-  const enableHdr = (w, h) => {
+  const tryHdr = (w, h) => {
     try {
-      if (!wantHdr || !("configureHighDynamicRange" in canvas) || !gl.drawingBufferStorage) return 0;
+      if (!window.matchMedia("(dynamic-range: high)").matches) return 0;
+      if (!("configureHighDynamicRange" in canvas) || !gl.drawingBufferStorage) return 0;
       if ("drawingBufferColorSpace" in gl) gl.drawingBufferColorSpace = "display-p3";
       gl.drawingBufferStorage(gl.RGBA16F, w, h);
       canvas.configureHighDynamicRange({ mode: "default" });
       return 1;
-    } catch (e) { return 0; }
+    } catch { return 0; }
   };
-  if (!hdr && "drawingBufferColorSpace" in gl) { try { gl.drawingBufferColorSpace = "display-p3"; } catch (e) {} }
+  if ("drawingBufferColorSpace" in gl) { try { gl.drawingBufferColorSpace = "display-p3"; } catch { /* stays sRGB */ } }
 
   /* ---------------------------------------------------------- resolution -- */
-  let scale = small ? 0.6 : 0.85;                 // adaptive, see frame timing
+  let scale = 0.9;
   const resize = () => {
+    layout();
+    scale = Math.min(scale, maxScale);
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const w = Math.max(2, Math.round(window.innerWidth * dpr * scale));
     const h = Math.max(2, Math.round(window.innerHeight * dpr * scale));
-    canvas.width = w; canvas.height = h;
-    hdr = enableHdr(w, h);
+    canvas.width = w;
+    canvas.height = h;
+    hdr = tryHdr(w, h);
     gl.viewport(0, 0, w, h);
-    gl.uniform2f(uRes, w, h);
+    gl.uniform2f(u.res, w, h);
   };
-  window.addEventListener("resize", resize);
-  resize();
-
-  /* ------------------------------------------------------------- region -- */
-  // The diagram only ever lives in empty space: the right of the title page,
-  // the interlude and the close on wide screens, the strip above the type on
-  // phones. Everywhere text can sit, the field is switched off entirely.
-  const region = small ? [0.0, 0.76, 1.0, 0.99] : [0.62, 0.07, 0.99, 0.93];
 
   /* ------------------------------------------------------------- energy -- */
-  // which chapter is under the middle of the screen decides how loud the field is
-  const zones = [
-    ["#top", 0.90], [".intertitle", 0.90], ["#contact", 0.85],
-    ["#about", 0], ["#career", 0], ["#scale", 0], ["#recognition", 0], ["#research", 0], ["#craft", 0]
-  ].map(([sel, e]) => [document.querySelector(sel), e]).filter(([el]) => el);
-  let energy = 1, energyTarget = 1;
-  const pickEnergy = () => {
-    const mid = window.innerHeight * 0.5;
-    for (const [el, e] of zones) {
+  // The field belongs to the three chapters that leave the right side empty (the
+  // title, the interlude, the close). Its brightness follows how much of the screen
+  // they cover, raised to a power so it is already gone while the next chapter's
+  // text is still entering. Every reading chapter therefore sits on a plain ground.
+  const zones = [$("#top"), $(".intertitle"), $("#contact")].filter(Boolean);
+  const PEAK = 0.9;
+
+  let energy = 0, energyTarget = 0, scrollVh = 0, scrollShown = 0, mx = 0, my = 0, tx = 0, ty = 0;
+  let zoneDirty = true, visible = !document.hidden, raf = 0, last = 0;
+  const t0 = performance.now();
+
+  const pickZone = () => {
+    zoneDirty = false;
+    if (disabled) { energyTarget = 0; return; }
+    const vh = window.innerHeight;
+    let covered = 0;
+    for (const el of zones) {
       const r = el.getBoundingClientRect();
-      if (r.top <= mid && r.bottom > mid) { energyTarget = e; return; }
+      covered += Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh;
     }
+    const e = PEAK * Math.pow(Math.min(1, covered), 4);
+    energyTarget = e < 0.01 ? 0 : e;
   };
 
-  let mx = 0, my = 0, tx = 0, ty = 0;
-  if (!reduce && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    window.addEventListener("pointermove", e => { tx = e.clientX / window.innerWidth - 0.5; ty = 0.5 - e.clientY / window.innerHeight; }, { passive: true });
-  }
-
-  /* --------------------------------------------------------------- frame -- */
-  let scrollVh = window.scrollY / window.innerHeight, scrollShown = scrollVh;
-  window.addEventListener("scroll", () => { scrollVh = window.scrollY / window.innerHeight; pickEnergy(); }, { passive: true });
-  pickEnergy();
-
-  let visible = !document.hidden;
-  document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) last = performance.now(); });
-
-  const t0 = performance.now();
-  let last = t0, slow = 0, fast = 0, blank = false;
-  const draw = (time, dt) => {
-    gl.uniform1f(uTime, reduce ? 12.0 : time);
-    gl.uniform1f(uScroll, scrollShown);
-    gl.uniform1f(uEnergy, energy);
-    gl.uniform1f(uHdr, hdr);
-    gl.uniform2f(uMouse, mx, my);
-    gl.uniform4f(uRegion, region[0], region[1], region[2], region[3]);
+  const draw = (time) => {
+    gl.uniform1f(u.time, time);
+    gl.uniform1f(u.scroll, scrollShown);
+    gl.uniform1f(u.energy, energy);
+    gl.uniform1f(u.hdr, hdr);
+    gl.uniform2f(u.mouse, mx, my);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
+  // reduced motion: one still frame with the pass complete, redrawn when the chapter changes
+  const drawStill = () => { pickZone(); energy = energyTarget; draw((tokens + 1) * ROW_SECONDS); };
+
+  let slow = 0, fast = 0;
   const frame = (now) => {
-    requestAnimationFrame(frame);
+    raf = 0;
     if (!visible) return;
-    const dt = Math.min(now - last, 100); last = now;
-    scrollShown += (scrollVh - scrollShown) * (reduce ? 1 : 0.10);
+    const dt = Math.min(now - last, 100);
+    last = now;
+    if (zoneDirty) pickZone();
+    scrollShown += (scrollVh - scrollShown) * 0.1;
     energy += (energyTarget - energy) * 0.06;
-    if (energy < 0.004 && energyTarget === 0) { if (!blank) { energy = 0; draw((now - t0) / 1000, dt); blank = true; } return; }
-    blank = false;
-    mx += (tx - mx) * 0.05; my += (ty - my) * 0.05;
-    draw((now - t0) / 1000, dt);
+    mx += (tx - mx) * 0.05;
+    my += (ty - my) * 0.05;
+
+    if (energyTarget === 0 && energy < 0.004) {       // nothing to show: draw one empty frame and stop
+      energy = 0;
+      draw((now - t0) / 1000);
+      return;
+    }
+    draw((now - t0) / 1000);
 
     // adaptive resolution: if the shader cannot hold ~40fps, render fewer pixels
     if (dt > 26) { slow++; fast = 0; } else { fast++; slow = Math.max(0, slow - 1); }
-    if (slow > 40 && scale > 0.3) { scale = Math.max(0.3, scale * 0.82); slow = 0; resize(); }
-    if (fast > 600 && scale < (small ? 0.6 : 0.85)) { scale = Math.min(small ? 0.6 : 0.85, scale * 1.1); fast = 0; resize(); }
+    if (slow > 40 && scale > 0.4) { scale = Math.max(0.4, scale * 0.85); slow = 0; resize(); }
+    else if (fast > 600 && scale < maxScale) { scale = Math.min(maxScale, scale * 1.1); fast = 0; resize(); }
+
+    raf = requestAnimationFrame(frame);
   };
 
-  if (reduce) {
-    // one still frame, redrawn on scroll so chapters keep their calm/bright state
-    energy = energyTarget;
-    const still = () => { energy += (energyTarget - energy) * 0.25; draw(12, 16); };
-    window.addEventListener("scroll", () => { scrollShown = scrollVh; still(); }, { passive: true });
-    window.addEventListener("resize", () => { resize(); still(); });
-    still();
-  } else {
-    requestAnimationFrame(frame);
+  const wake = () => {
+    if (reduce) { drawStill(); return; }
+    if (!raf && visible) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  };
+
+  window.addEventListener("scroll", () => { scrollVh = window.scrollY / window.innerHeight; zoneDirty = true; wake(); }, { passive: true });
+  window.addEventListener("resize", () => { resize(); zoneDirty = true; wake(); });
+  document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) wake(); });
+  if (!reduce && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    window.addEventListener("pointermove", e => {
+      tx = e.clientX / window.innerWidth - 0.5;
+      ty = 0.5 - e.clientY / window.innerHeight;
+      if (energyTarget > 0) wake();
+    }, { passive: true });
   }
+
+  scrollVh = scrollShown = window.scrollY / window.innerHeight;
+  resize();
   document.documentElement.classList.add("has-field");
+  wake();
 })();
