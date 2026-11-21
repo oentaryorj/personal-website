@@ -487,3 +487,4 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 /* the rail is navigation, so without scripted travel it becomes a normal scroll region */
 @media (prefers-reduced-motion: reduce) and (min-height: 561px) { .career .stage { overflow-x: auto; overflow-y: hidden; } }
 @media (min-height: 561px) { html:not(.reveal) .career .stage { overflow-x: auto; overflow-y: hidden; } }
+.nw { white-space: nowrap; }
