@@ -84,3 +84,6 @@ Owner asked for a premium editorial CV that does not look machine-made, position
 - Headings: no italics anywhere, a hairline over each heading, emphasis as a quieter tone. Labels in sentence case, no chapter kickers, no colophon credit.
 - Hero console calmed to one radar. Fonts self-hosted (latin subset), share card added.
 - Copy: scale and impact first ("at scale", $100M+), working next to the business, team size removed. No new facts.
+
+## Revision 13: a calmer entrance for senior readers
+Owner asked for a better entrance for senior readers. The gauges, radar, leader lines, edge rulers, pointer reticle, scan line and portrait scan were removed (shader code included); the globe gate and the fly-through stay. Hero role and figure labels are larger, and a Download CV button sits beside Say hello so the CV is one click from the first screen.
