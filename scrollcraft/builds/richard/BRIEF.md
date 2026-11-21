@@ -74,6 +74,13 @@ Gate enlarged and the wireframe globe replaced by a dotted hologram Earth facing
 ## Revision 11: the command centre, then the corridor
 Owner supplied a Jarvis-style control-room reference and asked for the background to be an entrance from such a command centre, followed by an animated visualisation of each aspect of the profile, all generated in code. The reference is taken as a genre only: no artwork, layout, text or labels are copied.
 - Feeling curve: awe at the threshold (command centre, hero) > surge (the fly-through, interlude) > calm focus (reading chapters in the corridor) > recognition (each visualisation answering its chapter) > the peak (the Asia map, unchanged, the largest span) > arrival (the light at the corridor's end warms and grows at the close).
-- Background: cockpit (gate, hologram Earth, gauges, leader lines, radar, trace, meters, console lips, edge rulers) that the scroll flies through, then a ribbed corridor whose motion is tied to scroll distance.
+- Background: cockpit (gate, hologram Earth, gauges, leader lines, radar, console lips, edge rulers) that the scroll flies through, then a ribbed corridor whose motion is tied to scroll distance.
 - Visualisations (viz.js, all drawn from the page's own content): career route comet, research constellation lit by the theme on screen, craft orbit driven by the tabs, recognition spine, portrait scan.
 - Layout fix: the research links moved out of the sticky column so the column fits every viewport.
+
+## Revision 12: restraint and positioning
+Owner asked for a premium editorial CV that does not look machine-made, positioned like a top forward-deployed AI and data science leader, in a cool (not warm) palette.
+- Palette: cool graphite with one steel-blue accent; electric cyan and the warm brass trial both dropped.
+- Headings: no italics anywhere, a hairline over each heading, emphasis as a quieter tone. Labels in sentence case, no chapter kickers, no colophon credit.
+- Hero console calmed to one radar. Fonts self-hosted (latin subset), share card added.
+- Copy: scale and impact first ("at scale", $100M+), working next to the business, team size removed. No new facts.
