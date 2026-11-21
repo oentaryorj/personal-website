@@ -256,6 +256,14 @@ a:hover { text-decoration-color: currentColor; }
   font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.3rem); line-height: 1.18; letter-spacing: -0.01em; text-wrap: balance;
 }
 
+/* ---------------------------------------------------------------- results -- */
+.results { margin-top: clamp(4rem, 9vw, 8rem); }
+.results ol { list-style: none; margin: var(--s6) 0 0; padding: 0; border-top: var(--rule); }
+.results li { display: grid; grid-template-columns: minmax(9rem, 18rem) minmax(0, 1fr); gap: var(--s4) var(--s6); align-items: center; padding: var(--s5) 0; border-bottom: var(--rule); }
+.results b { font: 400 clamp(2.8rem, 1.6rem + 4vw, 5.2rem)/0.95 var(--font-display); letter-spacing: -0.03em; font-variant-numeric: lining-nums; }
+.results p { margin: 0; max-width: 46ch; font-size: var(--t-lg); line-height: 1.35; }
+@media (max-width: 640px) { .results li { grid-template-columns: 1fr; } }
+
 /* ---------------------------------------------------------------- career -- */
 .route { position: absolute; left: 0; right: 0; bottom: clamp(0.5rem, 2.5vh, 1.75rem); width: 100%; height: clamp(64px, 11vh, 92px); pointer-events: none; }
 .rail { display: flex; height: 100%; align-items: stretch; gap: clamp(2.5rem, 5vw, 6rem); padding-inline: var(--pad); will-change: transform; }
