@@ -256,11 +256,9 @@ a:hover { text-decoration-color: currentColor; }
 .station--lead { flex-basis: clamp(20rem, 38vw, 40rem); justify-content: center; }
 .station--end { flex-basis: clamp(1rem, 8vw, 8rem); }
 .station:not(.station--lead, .station--end) {
-  align-self: center; height: auto; justify-content: flex-start;
+  align-self: flex-start; margin-top: clamp(4.5rem, 20vh, 9rem); height: auto; justify-content: flex-start;
   padding-block: var(--s5); border-top: var(--rule);
-  transform: translateY(calc(clamp(1.5rem, 6vh, 4rem) * -0.7));
 }
-.station--low:not(.station--lead) { transform: translateY(clamp(1.5rem, 6vh, 4rem)); }
 .station__kind {
   margin: 0; font-family: var(--font-display); color: var(--accent);
   font-size: clamp(2.2rem, 1.5rem + 2.4vw, 3.6rem); line-height: 1; letter-spacing: -0.02em;
@@ -309,7 +307,7 @@ a:hover { text-decoration-color: currentColor; }
 .ledger::before { background: var(--hair); }
 .ledger::after { background: linear-gradient(var(--accent), var(--glow)); box-shadow: 0 0 10px var(--accent); transform-origin: top; transform: scaleY(var(--spine)); }
 .ledger li { position: relative; }
-.ledger li::before { content: ""; position: absolute; left: calc(-1 * var(--s6) - 3px); top: calc(var(--s5) + 0.55em); width: 7px; height: 7px; border-radius: 50%; background: var(--hair); transition: background 400ms var(--ease-out), box-shadow 400ms var(--ease-out); }
+.ledger li::before { content: ""; position: absolute; left: calc(-1 * var(--s6) - 3px); top: calc(var(--s5) + 0.8 * clamp(1.5rem, 1.2rem + 1vw, 2.1rem) - 3.5px); width: 7px; height: 7px; border-radius: 50%; background: var(--hair); transition: background 400ms var(--ease-out), box-shadow 400ms var(--ease-out); }
 .ledger li.in::before, html:not(.reveal) .ledger li::before { background: var(--glow); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent), 0 0 12px var(--accent); }
 .ledger li { display: grid; grid-template-columns: minmax(6rem, 9rem) 1fr; gap: var(--s5); padding: var(--s5) 0; border-bottom: var(--rule); align-items: baseline; }
 .ledger .yr { font-family: var(--font-display); font-size: clamp(1.5rem, 1.2rem + 1vw, 2.1rem); letter-spacing: -0.01em; color: var(--accent); white-space: nowrap; }
@@ -364,8 +362,8 @@ a:hover { text-decoration-color: currentColor; }
 .index__panels [role="tabpanel"][hidden] { display: none; }
 .index__panels [role="tabpanel"]:not([hidden]) { animation: panel-in 420ms var(--ease-out); }
 @keyframes panel-in { from { opacity: 0; transform: translateY(10px); } }
-.index__panels li { padding: var(--s4) 0; border-bottom: var(--rule); font-size: var(--t-lg); letter-spacing: -0.01em; line-height: 1.25; }
-.index__panels small { margin-left: 0.6em; font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--accent); }
+.index__panels li { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.6em; padding: var(--s4) 0; border-bottom: var(--rule); font-size: var(--t-lg); letter-spacing: -0.01em; line-height: 1.25; }
+.index__panels small { margin: 0; font-size: var(--t-xs); letter-spacing: 0.01em; color: var(--accent); }
 .index__panels .inline { display: flex; flex-wrap: wrap; gap: var(--s2); border-top: 0; }
 .index__panels .inline li { padding: 0.45em 1em; border: var(--rule); border-radius: var(--r-pill); font-size: var(--t-sm); }
 /* without JS the tabs stay hidden and every panel simply stacks */
@@ -452,8 +450,6 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
   .station h3 { margin-top: var(--s3); font-size: var(--t-lg); }
   .station > p:not(.station__kind, .station__meta) { font-size: var(--t-sm); line-height: 1.5; }
   .station__kind { font-size: clamp(1.8rem, 5.5vh, 2.6rem); }
-  .station--low:not(.station--lead) { transform: translateY(2.5vh); }
-  .station:not(.station--lead, .station--low, .station--end) { transform: translateY(-2vh); }
   .station--lead .h-lg { font-size: clamp(2rem, 8vh, 3.6rem); }
   .path { margin-top: var(--s5); }
   .path > div { padding-block: var(--s2); }
@@ -487,3 +483,5 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
 /* the rail is navigation, so without scripted travel it becomes a normal scroll region */
 @media (prefers-reduced-motion: reduce) and (min-height: 561px) { .career .stage { overflow-x: auto; overflow-y: hidden; } }
 @media (min-height: 561px) { html:not(.reveal) .career .stage { overflow-x: auto; overflow-y: hidden; } }
+p { text-wrap: pretty; }
+.recog__head p, .craft__head p { text-wrap: balance; }
