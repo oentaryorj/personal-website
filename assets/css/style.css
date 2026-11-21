@@ -317,7 +317,7 @@ a:hover { text-decoration-color: currentColor; }
 /* -------------------------------------------------------------- research -- */
 .research__net { display: block; width: 100%; height: clamp(0px, calc(100svh - 560px), 220px); margin-top: var(--s4); }   /* gives way when the screen is too short to hold it */
 .research__sticky { position: sticky; top: clamp(2rem, 8vh, 5rem); }
-.papers { display: flex; align-items: baseline; gap: var(--s4); margin: var(--s7) 0 0; }
+.papers { display: flex; align-items: center; gap: var(--s4); margin: var(--s7) 0 0; }
 .papers__num { font-family: var(--font-display); font-size: clamp(3.4rem, 2rem + 4vw, 6rem); line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .papers__txt { max-width: 21rem; font-size: var(--t-sm); line-height: 1.4; color: var(--ink-soft); }
 .links { list-style: none; margin: clamp(2.5rem, 7vh, 5rem) 0 0; padding: 0; border-top: var(--rule); }
@@ -423,7 +423,7 @@ html:not(.reveal) .index__panels ul { margin-bottom: var(--s7); }
   .portrait { max-width: 22rem; }
   .ledger li { grid-template-columns: 6.6rem 1fr; gap: var(--s3); }
   .research__side { margin-bottom: var(--s8); }
-  .research__net { height: 190px; }
+  .research__net { height: 230px; }
 
   .scale__stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: var(--s4); padding-top: clamp(3.5rem, 9vh, 5rem); }
   .scale__canvas { grid-row: 1; }
