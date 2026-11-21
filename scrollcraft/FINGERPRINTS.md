@@ -67,3 +67,4 @@ constrain yours.
 | Build | Grammar | Nav | Hero device | Act-sequence shape | Close | Signature move |
 |---|---|---|---|---|---|---|
 | richard (personal site) | Chaptered editorial | Margin folio of chapter ticks, no top bar | Typographic title page, no media | flow, flow, flow, pan, pin(peak), flow, flow, pointer index, colophon | Colophon with CTA as running text | Scatter to Grid canvas (250 points to four ordered grids) |
+| richard rev. 11 (personal site) | Chaptered editorial | Margin folio of chapter ticks, no top bar | Command-centre gate the scroll flies through into a corridor | flow, flow, flow, pan + route, pin(peak, Asia map), flow + spine, flow + constellation, tabs + orbit, colophon | Arrival: the corridor's end light warms into the colophon | Fly-through from cockpit to corridor, with a visualisation per profile aspect |

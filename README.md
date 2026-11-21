@@ -8,10 +8,11 @@ Dependency-free static site: semantic HTML, hand-written CSS, and vanilla JavaSc
 
 Designed with the [scroll-craft](.claude/skills/scroll-craft) skill as a chaptered editorial page:
 
-- One persistent WebGL "AI field" behind the whole page (`assets/js/ai-field.js`): a regular, fully connected neural network diagram (6 evenly spaced layers, widths 4-6-8-8-6-4) over a faint matrix grid, with a front of activation sweeping through it like a forward pass. It lives only in empty space (right of the title, interlude and close on wide screens, above the type on phones) and is off behind all reading text, calmer behind text, brighter on the title and interludes. HDR highlights on HDR displays, SDR tone-mapped elsewhere, CSS gradient if WebGL is unavailable
+- One persistent WebGL "AI field" behind the whole page (`assets/js/ai-field.js`): a command centre. A large ticked gate holds a hologram Earth (continents as glowing dots from a baked Natural Earth land mask, a pillar of light and a spreading ring on each of the five markets) inside three tilted orbit rings, surrounded by instruments: a row of gauges, leader lines, a radar, a live trace and a bank of meters, framed by console lips and edge rulers. Scrolling flies you through the gate: the cockpit swells past the screen and a ribbed corridor of lit panels opens beyond it; the rest of the page travels along that corridor, and the light at its end warms and grows towards the close. A targeting reticle follows the pointer on desktop and a notch on the right ruler tracks scroll position. Brightest on the title, interlude and close; a calm wash behind reading text. The gate is sized and placed from the measured position of the headlines (right side on wide screens, free sky above the type on phones and tablets), and the scene dims where type overlaps it. Kept light: no libraries or build step, about 36 KB of gzipped code in total, the shader skips pixels outside the gate and instruments, renders at about 30 fps when only breathing behind reading text, adapts its resolution to the device, and asks for the default (not high-performance) GPU. Static frame under `prefers-reduced-motion`, CSS gradient if WebGL is unavailable.
 - Title page, chapters over the field, margin folio of chapter ticks
 - Lateral career rail (scroll-driven pan)
-- Signature move, "Scatter to Grid": 250 points (one per production model) settle into four ordered grids as you scroll, while the count climbs to 250
+- Signature move, "Asia Lights Up": a dot-matrix map of Asia (real coastlines baked into `assets/js/models.js`, sampled from Natural Earth via the `world-atlas` package) draws itself in as you scroll; Singapore, Hong Kong, Taiwan, India and Indonesia light up in turn, links open between them with packets of light, and the counter climbs to 250+
+- A code-drawn visualisation for each part of the profile (`assets/js/viz.js`): a career route that a comet flies along as you scroll, with each employer lighting up when reached; a constellation of papers around the five research themes, lit by the theme on screen; an orbit system whose rings follow the discipline tabs; a recognition ledger that grows a lit spine; and a scan line over the portrait
 - Pointer-operated expertise index (keyboard accessible tabs)
 - Respects `prefers-reduced-motion`; no layout shift; no horizontal overflow on phones
 - Design brief: `scrollcraft/builds/richard/BRIEF.md`
@@ -24,8 +25,9 @@ assets/
   css/scrollcraft.css   # engine tokens and devices (unmodified)
   css/style.css         # this site's design
   js/scrollcraft.js     # engine (unmodified)
-  js/ai-field.js        # WebGL background world
-  js/main.js            # folio, Scatter to Grid, expertise index
+  js/ai-field.js        # WebGL command centre and corridor
+  js/site.js / models.js # page behaviour / the Asia map
+  js/viz.js             # career route, research constellation, craft orbit, ledger spine
 .github/workflows/deploy.yml
 ```
 
@@ -46,3 +48,4 @@ Pushing to `master` (this repo's default branch) triggers `.github/workflows/dep
 ## Content
 
 Profile details (roles, education, publications, awards) are sourced from publicly available profiles (LinkedIn, Google Scholar, ResearchGate, GitHub). Update `index.html` directly to refresh content — there is no CMS or data layer.
+

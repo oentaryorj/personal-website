@@ -123,6 +123,8 @@
   const folio = $("#folio");
   const folioLinks = folio ? $$("a", folio) : [];
   const chapters = folioLinks.map(a => $(a.getAttribute("href")));
+  const runhead = $("#runhead");
+  const runChap = $("#runChap");
   let folioCurrent = -1;
   const folioUpdate = () => {
     if (!folio) return;
@@ -134,8 +136,10 @@
     }
     // the career rail slides under the left margin, so the ticks step aside there
     folio.classList.toggle("on", hit >= 0 && chapters[hit].id !== "career");
+    if (runhead) runhead.classList.toggle("on", hit >= 0);
     if (hit === folioCurrent) return;
     folioCurrent = hit;
+    if (runChap && hit >= 0) runChap.textContent = folioLinks[hit].textContent.trim().replace(/^(\S+)\s+/, "$1. ");
     folioLinks.forEach((a, i) => (i === hit ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
   };
   if (folio) folio.hidden = false;
