@@ -298,6 +298,20 @@ html:not(.js) .index__panels ul { margin-bottom: var(--sc-7); }
 .colophon a { text-decoration: none; color: var(--sc-ink); }
 .colophon a:hover { color: var(--sc-accent); }
 
+.cv {
+  align-self: flex-start; margin-top: var(--sc-6);
+  display: inline-flex; align-items: baseline; gap: .8em;
+  padding: .95em 1.5em; border: 1px solid var(--sc-hairline-strong); border-radius: var(--sc-r-pill);
+  color: var(--sc-ink); text-decoration: none; font-size: var(--sc-t-sm); font-weight: 500; white-space: nowrap;
+  transition: transform 140ms var(--sc-ease-out), background-color 160ms var(--sc-ease-out), color 160ms var(--sc-ease-out), border-color 160ms var(--sc-ease-out);
+}
+.cv small { font-size: var(--sc-t-xs); font-weight: 400; color: var(--sc-ink-soft); transition: color 160ms var(--sc-ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .cv:hover { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
+  .cv:hover small { color: var(--sc-accent-ink); }
+}
+.cv:active { transform: scale(0.97); }
+
 /* ----------------------------------------------------------------- folio -- */
 .folio {
   position: fixed; left: clamp(.9rem, 2vw, 1.6rem); top: 50%; z-index: var(--sc-z-chrome);
