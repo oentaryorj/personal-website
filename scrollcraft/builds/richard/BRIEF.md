@@ -87,3 +87,13 @@ Owner asked for a premium editorial CV that does not look machine-made, position
 
 ## Revision 13: a calmer entrance for senior readers
 Owner asked for a better entrance for senior readers. The gauges, radar, leader lines, edge rulers, pointer reticle, scan line and portrait scan were removed (shader code included); the globe gate and the fly-through stay. Hero role and figure labels are larger, and a Download CV button sits beside Say hello so the CV is one click from the first screen.
+
+## Revision 14: employer-first structure
+Owner asked for a radical improvement aimed at top employers. The world (globe gate, corridor, Asia map peak, cool palette) was kept because the owner steered it across 13 revisions; the change is to what a hiring manager meets and how fast.
+- Hero: one line of prior employers under the role (QuantumBlack, McLaren Applied, SMU), so credibility lands in the first screen.
+- Persistent action: the running head now carries CV and Say hello on every chapter.
+- "Selected results" (which repeated the hero figures) became "How I work": four positioning principles, each backed by a real figure from the site. No new facts.
+- Career rail: each station now leads with its result (Gold Medal, 12 papers, Days to hours, 30% lower defaults, 250+ models) above the employer, so a skim reads as an outcome story. Duplicate facts removed.
+- Close: a primary "Say hello on LinkedIn" button beside Download CV, replacing an inline link.
+- schema.org Person data for search and recruiter tooling.
+Verified in headless Chrome (software GL) at 1440x900 and 390x844, no horizontal overflow; not on a real phone.
