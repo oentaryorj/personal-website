@@ -27,9 +27,7 @@
     const ctx = canvas.getContext("2d");
     let w = 0, h = 0, raf = 0, on = false;
     const paint = (now = 0) => { ctx.clearRect(0, 0, w, h); if (w > 2 && h > 2) draw(ctx, w, h, now / 1000); };
-    // these are ambient: 30fps is plenty, and it leaves the frame budget to the background and the scroll
-    let lastPaint = 0;
-    const loop = now => { raf = 0; if (!on) return; if (now - lastPaint >= 30) { lastPaint = now; paint(now); } raf = requestAnimationFrame(loop); };
+    const loop = now => { raf = 0; if (!on) return; paint(now); raf = requestAnimationFrame(loop); };
     const size = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       w = canvas.clientWidth; h = canvas.clientHeight;

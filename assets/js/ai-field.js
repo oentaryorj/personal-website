@@ -355,6 +355,16 @@
   // about 30fps when it is only breathing behind reading text.
   const IDLE_SLOW = 20000, IDLE_STOP = 120000;
   let slow = 0, fast = 0, scrollAt = -1e9, activeAt = 0;
+  const meter = { scale: 0 };
+  // Add ?fps to the address to see the page's real frame rate and the field's resolution on this machine.
+  if (/[?&]fps\b/.test(location.search)) {
+    const el = document.createElement("div");
+    el.style.cssText = "position:fixed;right:8px;bottom:8px;z-index:200;padding:6px 10px;border-radius:6px;background:rgba(0,0,0,.75);color:#9f9;font:12px/1.3 ui-monospace,Menlo,monospace;pointer-events:none;white-space:pre";
+    document.body.appendChild(el);
+    let n = 0, t = performance.now();
+    const tick = now => { n++; if (now - t >= 1000) { el.textContent = Math.round(n * 1000 / (now - t)) + " fps\nfield scale " + meter.scale.toFixed(2) + "\n" + canvas.width + "x" + canvas.height; n = 0; t = now; } requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
   const frame = (now) => {
     raf = 0;
     if (!visible) return;
@@ -363,10 +373,12 @@
     if (idle > IDLE_STOP) return;                                   // paused; any scroll, touch or key wakes it
     const resting = idle > IDLE_SLOW;
     const scrolling = now - scrollAt < 250;
-    // full rate only where the scene is the star (title, interlude, close) and the reader is acting;
-    // behind reading text it is a faint wash, so it gets 30fps while scrolling and 15fps otherwise
-    const busy = !resting && (energy > 0.6 || Math.abs(tx - mx) + Math.abs(ty - my) > 0.002) && (scrolling || energy > 0.6);
-    const gap = resting ? 83 : busy ? 0 : scrolling ? 32 : 66;
+    // Full display rate (60fps or the screen's own) whenever anything is moving: scrolling, the pointer,
+    // or the scene being the star. Resolution, not frame rate, is what gives way on a slow GPU.
+    // Only a page that has been still for a while eases off, since nothing visible changes then.
+    const moving = scrolling || energy > 0.6 || Math.abs(tx - mx) + Math.abs(ty - my) > 0.002 || Math.abs(scr - scrShown) > 0.0005;
+    const busy = !resting && moving;
+    const gap = resting ? 83 : busy ? 0 : 33;
     if (now - last < gap - 2) { raf = requestAnimationFrame(frame); return; }
     const dt = Math.min(now - last, 100);
     last = now;
@@ -379,10 +391,13 @@
 
     // adaptive resolution, quick to back off: if frames take longer than the target, drop pixels within
     // about a third of a second, and only win them back after a long calm stretch
-    const budget = (gap || 16.7) * 1.45 + 4;
-    if (dt > budget) { slow++; fast = 0; } else { fast++; slow = Math.max(0, slow - 1); }
-    if (slow > 5 && scale > MIN_SCALE) { scale = Math.max(MIN_SCALE, scale * 0.82); slow = 0; resize(); }
-    else if (fast > 900 && scale < maxScale) { scale = Math.min(maxScale, scale * 1.08); fast = 0; resize(); }
+    // adaptive resolution aimed at 60fps: a frame over 19ms counts as slow; 5 of them cut the pixels by 18%
+    if (gap === 0) {
+      if (dt > 19) { slow++; fast = 0; } else if (dt < 15) { fast++; slow = Math.max(0, slow - 1); }
+      if (slow > 5 && scale > MIN_SCALE) { scale = Math.max(MIN_SCALE, scale * 0.82); slow = 0; resize(); }
+      else if (fast > 600 && scale < maxScale) { scale = Math.min(maxScale, scale * 1.08); fast = 0; resize(); }
+    }
+    meter.scale = scale;
 
     raf = requestAnimationFrame(frame);
   };

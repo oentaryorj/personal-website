@@ -107,3 +107,6 @@ Measured in headless Chrome with software GL (hero scroll 31 to 60 fps page-wide
 
 ## Revision 16: less empty space on desktop
 Content column widened (82rem to 98rem) with clearance kept for the chapter ticks; section padding roughly halved; interlude cut from a full screen to 62%; career cards enlarged and centred in their stage; the model chapter gives the map 8 of 12 columns; recognition gains a derived "9 honours since 2004" figure; the skills chapter's gap closed. Page height at 1440x900 dropped from 22.5 to 18.9 screens. Desktop only; phone layout untouched.
+
+## Revision 17: 60fps target
+The 30fps cap behind reading text is gone: the field now runs at the display rate whenever the page is scrolling, the pointer is moving or the scene is the star, and resolution (not frame rate) gives way: a frame over 19ms counts as slow, and 5 of them cut the pixels by 18% (floor 0.32). Only a page left still eases to 30fps, then 12fps. Ambient canvases are back to full rate. Add ?fps to the address to show the real frame rate, field scale and resolution on any machine. Measured only on software GL (58fps at the floor scale); not on a real laptop GPU.
