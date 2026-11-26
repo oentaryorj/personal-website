@@ -76,7 +76,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ------------------------------------------------------------- type, ui -- */
 .sec, .hero, .statement { background: var(--bg); color: var(--ink); }
-.sec { padding-block: clamp(4rem, 9vw, 7.5rem); }
+.sec { padding-block: clamp(3.5rem, 6.5vw, 5.75rem); }
 .sec + .sec { border-top: 1px solid var(--hair); }
 .h2 { font-size: clamp(2rem, 1.1rem + 3.6vw, 3.5rem); font-weight: 600; line-height: 1.06; letter-spacing: -0.035em; text-wrap: balance; max-width: 20ch; }
 .h2--xl { font-size: clamp(2.8rem, 1rem + 7vw, 6rem); max-width: none; }
@@ -98,8 +98,8 @@ a { color: inherit; text-decoration: none; }
 .btn:active { transform: scale(.98); }
 
 /* entry: a short fade and rise, only once the script runs */
-.reveal [data-in], .reveal [data-stagger] > * { opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .7s var(--ease), transform .7s var(--ease); }
-.reveal .in { opacity: 1 !important; transform: none !important; }
+.reveal:not(.sd) [data-in], .reveal:not(.sd) [data-stagger] > * { opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.reveal:not(.sd) .in { opacity: 1 !important; transform: none !important; }
 .rise { opacity: 0; transform: translateY(14px); animation: rise .9s var(--ease) forwards; animation-delay: var(--d, 0s); }
 @keyframes rise { to { opacity: 1; transform: none; } }
 
@@ -128,9 +128,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------- statement -- */
-.statement { padding-block: clamp(3rem, 12vh, 8rem) clamp(5rem, 16vh, 10rem); }
-.statement__line { font-size: clamp(2.2rem, 1rem + 6.4vw, 6rem); font-weight: 600; line-height: 1.04; letter-spacing: -0.04em; text-wrap: balance; max-width: 16ch; }
-.statement__line + .statement__line { margin-top: clamp(2.5rem, 12vh, 7rem); }
+.statement__pin { display: grid; align-content: center; min-height: 80svh; padding-block: 4rem; }
+.statement__line { font-size: clamp(2.2rem, 1rem + 6.2vw, 5.75rem); font-weight: 600; line-height: 1.04; letter-spacing: -0.04em; text-wrap: balance; max-width: 16ch; }
+.statement__line + .statement__line { margin-top: clamp(1.25rem, 4.5vh, 2.75rem); }
 
 /* ------------------------------------------------------------- industries -- */
 .industries { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(.75rem, 1.4vw, 1.1rem); margin-top: clamp(2rem, 5vw, 3.5rem); }
@@ -159,13 +159,19 @@ a { color: inherit; text-decoration: none; }
 .act { position: relative; height: calc(var(--span) * 100vh); height: calc(var(--span) * 100svh); }
 .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; }
 .scale { background: var(--bg0); border-top: 1px solid var(--hair); }
-.scale__stage { display: grid; grid-template-rows: auto minmax(0, 1fr); padding: calc(var(--nav-h) + 2rem) 0 clamp(1rem, 4vh, 2.5rem); }
-.scale__top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; }
-.scale__count { display: flex; align-items: baseline; gap: .75rem; }
-.scale__num { font-size: clamp(3rem, 1rem + 6vw, 6.5rem); font-weight: 600; line-height: .9; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+.scale__stage { padding: 0; }
+.scale__in { height: 100%; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-rows: minmax(0, 1fr); gap: clamp(1rem, 3vw, 3rem); align-items: center; padding-block: calc(var(--nav-h) + 1.5rem) clamp(1rem, 3vh, 2rem); }
+.scale__top { display: flex; flex-direction: column; gap: clamp(1.5rem, 5vh, 3rem); }
+.scale__count { display: flex; flex-direction: column; gap: .5rem; }
+.scale__num { font-size: clamp(3.5rem, 1rem + 7vw, 7.5rem); font-weight: 600; line-height: .9; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
 .scale__unit { font-size: .9375rem; color: var(--soft); }
-.scale__canvas { width: 100%; height: 100%; min-height: 0; max-width: var(--maxw); margin-inline: auto; }
-@media (max-width: 760px) { .scale__top { flex-direction: column; align-items: flex-start; } .scale__num { font-size: clamp(3rem, 16vw, 4.5rem); } }
+.scale__canvas { width: 100%; height: 100%; min-height: 0; }
+@media (max-width: 860px) {
+  .scale__in { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-items: start; }
+  .scale__top { gap: 1rem; }
+  .scale__count { flex-direction: row; align-items: baseline; gap: .75rem; }
+  .scale__num { font-size: clamp(3rem, 16vw, 4.5rem); }
+}
 
 /* ----------------------------------------------------------------- about -- */
 .about { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 6vw, 5.5rem); align-items: center; }
@@ -270,8 +276,18 @@ html:not(.reveal) .index__panels [role="tabpanel"] + [role="tabpanel"] { margin-
     .hero__main { animation: hero-out linear both; animation-timeline: view(); animation-range: exit 0% exit 90%; }
     @keyframes hero-out { to { opacity: 0; transform: translate3d(0, -5vh, 0) scale(.96); } }
 
-    .statement__line { animation: line-on linear both; animation-timeline: view(); animation-range: entry 35% cover 48%; }
-    @keyframes line-on { from { opacity: .18; transform: translate3d(0, 3vh, 0); } to { opacity: 1; transform: none; } }
+    /* statement: the section pins, and the three lines light up one after another as you scroll through it */
+    .statement { height: 260svh; view-timeline: --stm block; }
+    .statement__pin { position: sticky; top: 0; height: 100svh; min-height: 0; padding-block: 0; }
+    .statement__line { animation: line-on linear both; animation-timeline: --stm; }
+    .statement__line:nth-child(1) { animation-range: contain 0% contain 26%; }
+    .statement__line:nth-child(2) { animation-range: contain 24% contain 52%; }
+    .statement__line:nth-child(3) { animation-range: contain 50% contain 78%; }
+    @keyframes line-on { from { opacity: .16; transform: translate3d(0, 4vh, 0); } to { opacity: 1; transform: none; } }
+
+    /* cards, ledger rows and headings rise and settle as they enter, each on its own timeline */
+    .sd [data-stagger] > *, .sd [data-in]:not([data-stagger]):not(.h2--xl) { animation: enter linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+    @keyframes enter { from { opacity: 0; transform: translate3d(0, 44px, 0) scale(.965); } to { opacity: 1; transform: none; } }
 
     .portrait img { animation: drift linear both; animation-timeline: view(); animation-range: cover; }
     @keyframes drift { from { transform: translate3d(0, 4%, 0) scale(1.1); } to { transform: translate3d(0, -4%, 0) scale(1.1); } }

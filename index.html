@@ -72,10 +72,12 @@
 
   <!-- STATEMENT: three lines light up one by one as they pass the middle of the screen -->
   <section class="statement dark" aria-label="Approach">
-    <div class="wrap">
-      <p class="statement__line">Embedded with the business.</p>
-      <p class="statement__line">Accountable for what ships.</p>
-      <p class="statement__line">Live in five markets, every day.</p>
+    <div class="statement__pin">
+      <div class="wrap">
+        <p class="statement__line">Embedded with the business.</p>
+        <p class="statement__line">Accountable for what ships.</p>
+        <p class="statement__line">Live in five markets, every day.</p>
+      </div>
     </div>
   </section>
 
@@ -125,9 +127,10 @@
   </section>
 
   <!-- SCALE (pinned map) -->
-  <section class="scale act dark" id="scale" style="--span:3.2" aria-label="Where the models run">
+  <section class="scale act dark" id="scale" style="--span:2.6" aria-label="Where the models run">
     <div class="stage scale__stage">
-      <div class="scale__top wrap">
+     <div class="scale__in wrap">
+      <div class="scale__top">
         <h2 class="h2">Live today in <span class="mute">five markets.</span></h2>
         <p class="scale__count" role="img" aria-label="More than 250 AI/ML models in production across Singapore, Hong Kong, Taiwan, India and Indonesia">
           <span class="scale__num" id="modelCount" aria-hidden="true">250+</span>
@@ -135,6 +138,7 @@
         </p>
       </div>
       <canvas id="modelField" class="scale__canvas" aria-hidden="true"></canvas>
+     </div>
     </div>
   </section>
 

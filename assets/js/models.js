@@ -207,9 +207,9 @@
   };
 
   const draw = (p) => {
-    const rv = smooth(0.03, 0.22, p);                           // the map draws in, west to east
+    const rv = smooth(0.0, 0.14, p);                           // the map draws in, west to east
     const act = MARKETS.map(m => smooth(m.from, m.from + 0.08, p));
-    const lit = Math.floor(COUNT * smooth(0.12, 0.86, p));
+    const lit = Math.floor(COUNT * smooth(0.06, 0.84, p));
     const rad = Math.max(1.1, S * 0.3);
     const regionK = [0, act[3], act[2], act[4]];                // India, Taiwan, Indonesia lights
     const radiusOf = g => rad * (1 + 0.25 * regionK[g]);
