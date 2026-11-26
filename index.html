@@ -20,7 +20,8 @@
 <meta name="twitter:card" content="summary_large_image" />
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-<link rel="preload" href="assets/img/hero-beams.webp" as="image" type="image/webp" />
+<link rel="preload" href="assets/img/hero-neural.webp" as="image" type="image/webp" media="(min-width: 901px) and (orientation: landscape), (min-width: 901px) and (min-aspect-ratio: 1/1)" />
+<link rel="preload" href="assets/img/hero-neural-m.webp" as="image" type="image/webp" media="(max-width: 900px), (max-aspect-ratio: 1/1)" />
 <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="assets/css/style.css" />
 <script type="application/ld+json">
@@ -50,7 +51,7 @@
 
   <!-- HERO -->
   <section class="hero dark">
-    <div class="hero__bg" aria-hidden="true"><img src="assets/img/hero-beams.webp" alt="" width="1920" height="1080" fetchpriority="high" decoding="async" /></div>
+    <div class="hero__bg" aria-hidden="true"><picture><source media="(max-width: 900px), (max-aspect-ratio: 1/1)" srcset="assets/img/hero-neural-m.webp" width="1170" height="2100" /><img src="assets/img/hero-neural.webp" alt="" width="2880" height="1620" fetchpriority="high" decoding="async" /></picture></div>
     <div class="wrap hero__in">
       <div class="hero__main">
         <p class="badge rise" style="--d:.05s"><i aria-hidden="true"></i>Richard Oentaryo, Ph.D. &middot; Head of AI/ML Solutions, DBS Bank</p>
