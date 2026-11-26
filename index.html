@@ -20,8 +20,6 @@
 <meta name="twitter:card" content="summary_large_image" />
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-<link rel="preload" href="assets/img/hero-neural.webp" as="image" type="image/webp" media="(min-width: 901px) and (orientation: landscape), (min-width: 901px) and (min-aspect-ratio: 1/1)" />
-<link rel="preload" href="assets/img/hero-neural-m.webp" as="image" type="image/webp" media="(max-width: 900px), (max-aspect-ratio: 1/1)" />
 <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="assets/css/style.css" />
 <script type="application/ld+json">
@@ -30,14 +28,13 @@
 </head>
 <body>
 
-<a class="skip-link" href="#impact">Skip to content</a>
+<a class="skip-link" href="#embedded">Skip to content</a>
 
 <header class="nav">
   <div class="nav__in">
     <a class="nav__brand" href="#top"><span class="nav__mark" aria-hidden="true">R</span>Richard Oentaryo</a>
     <nav class="nav__links" aria-label="Sections">
       <a href="#embedded">Approach</a>
-      <a href="#impact">Impact</a>
       <a href="#about">About</a>
       <a href="#career">Experience</a>
       <a href="#research">Research</a>
@@ -51,7 +48,6 @@
 
   <!-- HERO -->
   <section class="hero dark">
-    <div class="hero__bg" aria-hidden="true"><picture><source media="(max-width: 900px), (max-aspect-ratio: 1/1)" srcset="assets/img/hero-neural-m.webp" width="1170" height="2100" /><img src="assets/img/hero-neural.webp" alt="" width="2880" height="1620" fetchpriority="high" decoding="async" /></picture></div>
     <div class="wrap hero__in">
       <div class="hero__main">
         <p class="badge rise" style="--d:.05s"><i aria-hidden="true"></i>Richard Oentaryo, Ph.D. &middot; Head of AI/ML Solutions, DBS Bank</p>
@@ -116,36 +112,6 @@
         <li class="card ind"><svg class="ind__ic" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h14l-3 4 3 4H5"/></svg><h3>Motorsport and transport</h3><p>F1-grade telemetry analytics at McLaren Applied, carried into the rail sector.</p></li>
         <li class="card ind"><svg class="ind__ic" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/></svg><h3>Education</h3><p>A Ph.D. at NTU, then five years of research at the Living Analytics Research Centre, SMU.</p></li>
       </ul>
-    </div>
-  </section>
-
-  <!-- IMPACT -->
-  <section class="sec light" id="impact">
-    <div class="wrap">
-      <h2 class="h2" data-in>How I work.</h2>
-      <p class="sub" data-in>Four habits behind the results.</p>
-      <div class="bento" data-stagger="70">
-        <article class="card card--7">
-          <p class="card__num">250+</p>
-          <h3>Embedded with the business.</h3>
-          <p>I sit beside the product heads, choose problems worth solving, and stay accountable after launch. Models live across five markets, creating more than $100M a year.</p>
-        </article>
-        <article class="card card--5">
-          <p class="card__num">6</p>
-          <h3>Production is the proof.</h3>
-          <p>Research only counts once it runs. I build the operating model and the team that ship it, again and again. Six agentic AI use cases cut employee toil by at least 50%.</p>
-        </article>
-        <article class="card card--5">
-          <p class="card__num">40+</p>
-          <h3>Depth where it matters.</h3>
-          <p>A research background keeps me honest about what works. Papers in JMLR, IEEE TSE, AAAI and WSDM, and now causal AI, foundation models for tabular data, and quantum AI.</p>
-        </article>
-        <article class="card card--7">
-          <p class="card__num">3+</p>
-          <h3>Leading across disciplines.</h3>
-          <p>Researchers, engineers and business owners work best as one team with one goal. Three or more industries served as a consultant, and five researchers directed at SMU.</p>
-        </article>
-      </div>
     </div>
   </section>
 
@@ -314,6 +280,7 @@
 
   <!-- CONTACT -->
   <section class="sec dark contact" id="contact">
+    <picture class="contact__bg" aria-hidden="true"><img src="assets/img/contact-neural.webp" alt="" width="2400" height="1100" loading="lazy" decoding="async" /></picture>
     <div class="wrap contact__in">
       <h2 class="h2 h2--xl" data-in>Let&rsquo;s <span class="grad">talk.</span></h2>
       <p class="sub" data-in>If you have a hard problem where AI has to work in production, I would like to hear it.</p>
