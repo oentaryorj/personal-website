@@ -97,3 +97,10 @@ Owner asked for a radical improvement aimed at top employers. The world (globe g
 - Close: a primary "Say hello on LinkedIn" button beside Download CV, replacing an inline link.
 - schema.org Person data for search and recruiter tooling.
 Verified in headless Chrome (software GL) at 1440x900 and 390x844, no horizontal overflow; not on a real phone.
+
+## Revision 15: responsiveness
+Owner reported the background janky on a laptop Chrome and the map slow.
+- Background field: drawn at 0.6 of CSS pixels (0.5 on compact screens), never above 1 device pixel per CSS pixel (was up to 1.25 x 0.8, so about full retina resolution). Behind reading text it renders at 30fps while scrolling and 15fps otherwise; full rate only on the title, interlude and close. Adaptive resolution now backs off within about a third of a second (floor 0.32) instead of after 40 slow frames.
+- Asia map: no idle loop and no ambient animation (sweep, travelling packets and pulse rings removed). It draws only when the scroll position changes, with a 150ms ease; dots are batched into a dozen fills and the settled land is a cached image; section geometry is measured on resize, not per scroll event. Chapter scroll length cut from 6.4 to 4.6 screens.
+- Career route, research net and orbit canvases: 30fps, device pixel ratio capped at 1.5.
+Measured in headless Chrome with software GL (hero scroll 31 to 60 fps page-wide); not measured on a real laptop GPU.

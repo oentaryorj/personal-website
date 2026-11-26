@@ -290,11 +290,14 @@
   };
 
   /* ---------------------------------------------------------- resolution -- */
-  let maxScale = 0.8, scale = 0.8;
+  // The field is soft light, so it is drawn at a fraction of the screen's pixels and stretched by the
+  // browser: about a quarter of the old pixel count on a retina laptop. Never above 1 device pixel per CSS pixel.
+  const MIN_SCALE = 0.32;
+  let maxScale = 0.6, scale = 0.6;
   const resize = () => {
-    maxScale = compactMQ.matches ? 0.65 : 0.8;
+    maxScale = compactMQ.matches ? 0.5 : 0.6;
     scale = Math.min(scale, maxScale);
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1);
     const w = Math.max(2, Math.round(window.innerWidth * dpr * scale));
     const h = Math.max(2, Math.round(window.innerHeight * dpr * scale));
     canvas.width = w;
@@ -359,8 +362,12 @@
     const idle = now - activeAt;
     if (idle > IDLE_STOP) return;                                   // paused; any scroll, touch or key wakes it
     const resting = idle > IDLE_SLOW;
-    const busy = !resting && (now - scrollAt < 250 || energy > 0.6 || Math.abs(tx - mx) + Math.abs(ty - my) > 0.002);
-    if (!busy && now - last < (resting ? 83 : 32)) { raf = requestAnimationFrame(frame); return; }
+    const scrolling = now - scrollAt < 250;
+    // full rate only where the scene is the star (title, interlude, close) and the reader is acting;
+    // behind reading text it is a faint wash, so it gets 30fps while scrolling and 15fps otherwise
+    const busy = !resting && (energy > 0.6 || Math.abs(tx - mx) + Math.abs(ty - my) > 0.002) && (scrolling || energy > 0.6);
+    const gap = resting ? 83 : busy ? 0 : scrolling ? 32 : 66;
+    if (now - last < gap - 2) { raf = requestAnimationFrame(frame); return; }
     const dt = Math.min(now - last, 100);
     last = now;
     if (zoneDirty) pickZone();
@@ -370,10 +377,12 @@
     my += (ty - my) * 0.05;
     draw((now - t0) / 1000);
 
-    // adaptive resolution: if the shader cannot hold ~40fps, render fewer pixels
-    if (dt > (busy ? 26 : 50)) { slow++; fast = 0; } else { fast++; slow = Math.max(0, slow - 1); }
-    if (slow > 40 && scale > 0.4) { scale = Math.max(0.4, scale * 0.85); slow = 0; resize(); }
-    else if (fast > 600 && scale < maxScale) { scale = Math.min(maxScale, scale * 1.1); fast = 0; resize(); }
+    // adaptive resolution, quick to back off: if frames take longer than the target, drop pixels within
+    // about a third of a second, and only win them back after a long calm stretch
+    const budget = (gap || 16.7) * 1.45 + 4;
+    if (dt > budget) { slow++; fast = 0; } else { fast++; slow = Math.max(0, slow - 1); }
+    if (slow > 5 && scale > MIN_SCALE) { scale = Math.max(MIN_SCALE, scale * 0.82); slow = 0; resize(); }
+    else if (fast > 900 && scale < maxScale) { scale = Math.min(maxScale, scale * 1.08); fast = 0; resize(); }
 
     raf = requestAnimationFrame(frame);
   };

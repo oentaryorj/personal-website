@@ -5,7 +5,8 @@
    through the pinned chapter. The five markets where the models run (Singapore,
    Hong Kong, Taiwan, India, Indonesia) light up in turn, then links open between
    them and packets of light travel along them. The counter climbs to 250+
-   alongside. The loop runs only while the chapter is on screen.
+   alongside. It draws only when the scroll position changes: no idle loop, no
+   ambient animation, so it stays responsive next to the background field.
 
    MAP glyphs: 0 sea, 1 land, 2 India, 3 Taiwan, 4 Singapore, 5 Hong Kong,
    6 Indonesia. 0.75 degree grid, 94 x 72, lon 60..130, lat 43..-10.5.
@@ -116,9 +117,22 @@
   const LINKS = [[3, 0], [0, 1], [1, 2], [3, 1], [0, 4]];        // India-Singapore, Singapore-Hong Kong, Hong Kong-Taiwan, India-Hong Kong, Singapore-Indonesia
 
   let W = 1, H = 1, accent = "#8FB0D6", soft = "#98A2AE", glow = "#D6E4F4", canvasBg = "#0B0D10";
-  let ox = 0, oy = 0, S = 1, shown = -1, onScreen = true, raf = 0;
+  let ox = 0, oy = 0, S = 1, shown = -1, drawn = -1, onScreen = true, raf = 0, dpr = 1;
+  let secTop = 0, travel = 1, dots = [], landDots = [], hiDots = [], layer = null, layerOk = false, lastLit = -1;
+
+  const px = (c, r) => [ox + c * MAP.xs * S, oy + r * S];
+  const font = (px_, w = 500) => `${w} ${px_}px Geist, system-ui, sans-serif`;
+
+  // measured once per resize, never while scrolling
+  const measure = () => {
+    secTop = section.getBoundingClientRect().top + window.scrollY;
+    travel = Math.max(section.offsetHeight - window.innerHeight, 1);
+  };
+  const progress = () => clamp((window.scrollY - secTop) / travel);
+  let target = reduce ? 1 : 0;
+
   const resize = () => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const r = canvas.getBoundingClientRect();
     W = Math.max(1, Math.round(r.width));
     H = Math.max(1, Math.round(r.height));
@@ -134,18 +148,27 @@
     const padR = Math.max(W * 0.12, 70), legend = 34, pad = 8;
     S = Math.min((W - padR - pad) / MAP_W, (H - legend - pad * 2) / MAP_H);
     ox = pad; oy = pad + Math.max(0, (H - legend - pad * 2 - MAP_H * S) / 2);
-    shown = -1;
+
+    // every land dot, with everything that does not change per frame worked out here
+    dots = [];
+    for (let r2 = 0; r2 < ROWS; r2++) {
+      const row = MAP.rows[r2];
+      for (let c = 0; c < COLS; c++) {
+        const g = row.charCodeAt(c) - 48;
+        if (g === 0 || g === 4 || g === 5) continue;          // sea, and the two city markers drawn separately
+        const edge = Math.min(smooth(0, 9, r2), smooth(0, 7, c), smooth(0, 7, COLS - 1 - c));   // cropped edges dissolve
+        if (edge <= 0.01) continue;
+        const [x, y] = px(c, r2);
+        dots.push({ x, y, e: edge, w: c / COLS, g: g === 1 ? 0 : g === 2 ? 1 : g === 3 ? 2 : 3 });
+      }
+    }
+    landDots = dots.filter(d => d.g === 0); hiDots = dots.filter(d => d.g !== 0);
+    layerOk = false; shown = -1; drawn = -1;
+    measure();
+    target = reduce ? 1 : progress();
     wake();
   };
 
-  const progress = () => {
-    const travel = Math.max(section.offsetHeight - window.innerHeight, 1);
-    return clamp(-section.getBoundingClientRect().top / travel);
-  };
-  let target = reduce ? 1 : progress();
-
-  const px = (c, r) => [ox + c * MAP.xs * S, oy + r * S];
-  const font = (px_, w = 500) => `${w} ${px_}px Geist, system-ui, sans-serif`;
   const label = (text, x, y, align, size, color, alpha) => {
     ctx.font = font(size);
     ctx.textAlign = align;
@@ -160,70 +183,78 @@
     ctx.globalAlpha = 1;
   };
 
-  const draw = (p, time) => {
-    const t = reduce ? 0 : time;
-    const rv = smooth(0.03, 0.30, p);                           // the map draws in, west to east
+  // Dots are grouped by (colour group, alpha step) and each group is filled once:
+  // a dozen fills a frame instead of three thousand.
+  const STEPS = 14;
+  const fillBuckets = (c2d, list, alphaOf, radiusOf, colorOf) => {
+    const buckets = new Map();
+    for (const d of list) {
+      const a = alphaOf(d);
+      if (a <= 0.01) continue;
+      const key = d.g * (STEPS + 1) + Math.min(STEPS, Math.round(a * STEPS));
+      let path = buckets.get(key);
+      if (!path) { path = new Path2D(); buckets.set(key, path); }
+      const rr = radiusOf(d.g);
+      path.moveTo(d.x + rr, d.y);
+      path.arc(d.x, d.y, rr, 0, 6.2832);
+    }
+    for (const [key, path] of buckets) {
+      c2d.globalAlpha = (key % (STEPS + 1)) / STEPS;
+      c2d.fillStyle = colorOf(Math.floor(key / (STEPS + 1)));
+      c2d.fill(path);
+    }
+    c2d.globalAlpha = 1;
+  };
+
+  const draw = (p) => {
+    const rv = smooth(0.03, 0.22, p);                           // the map draws in, west to east
     const act = MARKETS.map(m => smooth(m.from, m.from + 0.08, p));
     const lit = Math.floor(COUNT * smooth(0.12, 0.86, p));
     const rad = Math.max(1.1, S * 0.3);
-    const sweepX = reduce ? -1 : (t * 0.00005) % 1.4 - 0.2;
+    const regionK = [0, act[3], act[2], act[4]];                // India, Taiwan, Indonesia lights
+    const radiusOf = g => rad * (1 + 0.25 * regionK[g]);
+    const colorOf = g => (g > 0 && regionK[g] > 0.05) ? accent : soft;
 
     ctx.clearRect(0, 0, W, H);
 
-    // ---- the dot map
-    for (let r = 0; r < ROWS; r++) {
-      const row = MAP.rows[r];
-      for (let c = 0; c < COLS; c++) {
-        const g = row.charCodeAt(c) - 48;
-        if (g === 0) continue;
-        const edge = Math.min(smooth(0, 9, r), smooth(0, 7, c), smooth(0, 7, COLS - 1 - c));   // the cropped north, west and east edges dissolve
-        const cr = clamp(rv * 1.5 - (c / COLS) * 0.5) * edge;
-        if (cr <= 0.01) continue;
-        const [x, y] = px(c, r);
-        const sweep = Math.exp(-Math.pow((c / COLS - sweepX) * 9, 2)) * 0.22;
-        let a = (0.26 + sweep) * cr, rr = rad, col = soft;
-        if (g === 2 || g === 3 || g === 6) {                    // India, Taiwan, Indonesia: the region itself lights up
-          const k = act[g === 2 ? 3 : g === 3 ? 2 : 4];
-          a = (0.26 + (0.62 - 0.26) * k + sweep) * cr + 0.12 * k;
-          rr = rad * (1 + 0.25 * k);
-          col = k > 0.05 ? accent : soft;
-          if (k > 0.3) { ctx.globalAlpha = 0.12 * k * cr; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rr * 2.4, 0, 6.2832); ctx.fill(); }
-        } else if (g === 4 || g === 5) { continue; }            // the two city markers are drawn below
-        ctx.globalAlpha = Math.min(1, a);
-        ctx.fillStyle = col;
-        ctx.beginPath(); ctx.arc(x, y, rr, 0, 6.2832); ctx.fill();
+    // ---- the dot map. Once drawn in, the plain land is a cached image.
+    const land = landDots;
+    if (rv >= 0.999) {
+      if (!layerOk) {
+        layer = layer || document.createElement("canvas");
+        layer.width = canvas.width; layer.height = canvas.height;
+        const lc = layer.getContext("2d");
+        lc.setTransform(dpr, 0, 0, dpr, 0, 0);
+        fillBuckets(lc, land, d => 0.26 * d.e, radiusOf, () => soft);
+        layerOk = true;
       }
+      ctx.drawImage(layer, 0, 0, W, H);
+    } else {
+      fillBuckets(ctx, land, d => 0.26 * clamp(rv * 1.5 - d.w * 0.5) * d.e, radiusOf, () => soft);
     }
-    ctx.globalAlpha = 1;
+    fillBuckets(ctx, hiDots, d => {
+      const k = regionK[d.g], cr = clamp(rv * 1.5 - d.w * 0.5) * d.e;
+      return (0.26 + 0.36 * k) * cr + 0.12 * k * cr;
+    }, radiusOf, colorOf);
 
-    // ---- links between markets, with packets of light travelling along them
+    // ---- links between markets
     const pts = MARKETS.map(m => px(...cellOf(...m.ll)));
-    LINKS.forEach(([i, j], n) => {
+    LINKS.forEach(([i, j]) => {
       const k = Math.min(act[i], act[j]);
       if (k <= 0.02) return;
       const [x0, y0] = pts[i], [x1, y1] = pts[j];
       const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.hypot(x1 - x0, y1 - y0) * 0.28;
-      ctx.globalAlpha = 0.42 * k; ctx.strokeStyle = accent; ctx.lineWidth = 1.2;
+      ctx.globalAlpha = 0.5 * k; ctx.strokeStyle = accent; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(mx, my, x1, y1); ctx.stroke();
-      const u = reduce ? 0.5 : ((t * 0.00022 + n * 0.27) % 1);
-      const bx = (1 - u) * (1 - u) * x0 + 2 * (1 - u) * u * mx + u * u * x1;
-      const by = (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * my + u * u * y1;
-      ctx.globalAlpha = 0.25 * k; ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(bx, by, rad * 3.2, 0, 6.2832); ctx.fill();
-      ctx.globalAlpha = 0.95 * k; ctx.beginPath(); ctx.arc(bx, by, rad * 1.2, 0, 6.2832); ctx.fill();
     });
     ctx.globalAlpha = 1;
 
-    // ---- market markers, pulses and names
+    // ---- market markers and names
     const fs = Math.max(11, Math.min(15, W * 0.021));
     MARKETS.forEach((m, i) => {
       const k = act[i];
       if (k <= 0.02) return;
       const [x, y] = pts[i];
-      for (let n = 0; n < 2; n++) {                             // pulse rings
-        const u = reduce ? 0.35 : ((t * 0.0006 + n * 0.5) % 1);
-        ctx.globalAlpha = (1 - u) * 0.55 * k; ctx.strokeStyle = accent; ctx.lineWidth = 1.2;
-        ctx.beginPath(); ctx.arc(x, y, rad * 2.4 + u * rad * 12, 0, 6.2832); ctx.stroke();
-      }
       ctx.globalAlpha = 0.22 * k; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rad * 4.2, 0, 6.2832); ctx.fill();
       ctx.globalAlpha = k; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rad * 2.1, 0, 6.2832); ctx.fill();
       ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, rad * 0.9, 0, 6.2832); ctx.fill();
@@ -241,23 +272,26 @@
     ctx.fillText("Models live in production", ox + 16, ly);
     ctx.globalAlpha = 1;
 
-    counter.textContent = lit >= COUNT ? "250+" : String(lit);
+    if (lit !== lastLit) { lastLit = lit; counter.textContent = lit >= COUNT ? "250+" : String(lit); }
   };
 
-  const frame = now => {
+  // Only while the position is still catching up with the scroll. A short ease (about 150ms) hides
+  // the steps of a mouse wheel; once it has arrived the loop stops and nothing runs.
+  const frame = () => {
     raf = 0;
     if (!onScreen) return;
-    if (!reduce) shown = shown < 0 ? target : shown + (target - shown) * 0.12;
-    else shown = target;
-    if (Math.abs(target - shown) < 0.0004) shown = target;
-    draw(shown, now);
-    if (!reduce) raf = requestAnimationFrame(frame);            // pulses and packets keep moving while the chapter is on screen
+    shown = shown < 0 || reduce ? target : shown + (target - shown) * 0.4;
+    if (Math.abs(target - shown) < 0.0006) shown = target;
+    if (shown !== drawn) { drawn = shown; draw(shown); }
+    if (shown !== target) raf = requestAnimationFrame(frame);
   };
   function wake() { if (!raf && onScreen) raf = requestAnimationFrame(frame); }
 
   window.addEventListener("scroll", () => { target = progress(); wake(); }, { passive: true });
-  window.addEventListener("resize", resize);
+  let resizeT = 0;
+  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(resize, 120); });
   new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; if (onScreen) { target = progress(); wake(); } }, { rootMargin: "20% 0px" }).observe(section);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(resize);
+  window.addEventListener("load", resize);
   resize();
 })();
