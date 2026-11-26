@@ -15,7 +15,7 @@ A calm, product-page system for both phone and desktop:
 - Hero with the four headline figures and CV and contact actions
 - "How I work" card grid, outcome-led career cards, honours ledger, research cards, discipline tabs
 - One signature piece: a dot-matrix map of Asia (`assets/js/models.js`) pinned for a few screens, where the five markets light up and the counter climbs to 250+. It draws only when the scroll position changes; nothing runs while it is still
-- No background animation, no WebGL, no per-frame work: scrolling is handled by the browser alone
+- No background animation, no WebGL, no per-frame work: scrolling is handled by the browser alone. Scroll-linked effects (title fades out, statement lines light up, portrait drift, closing headline settles) are CSS scroll-driven animations on transform and opacity, so they run on the compositor; browsers without support show everything in its finished state
 - Respects `prefers-reduced-motion`; no horizontal overflow on phones
 
 ## Structure
