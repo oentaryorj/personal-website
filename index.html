@@ -116,18 +116,16 @@
   </section>
 
   <!-- SCALE (pinned map) -->
-  <section class="scale act dark" id="scale" style="--span:2.6" aria-label="Where the models run">
-    <div class="stage scale__stage">
-     <div class="scale__in wrap">
-      <div class="scale__top">
+  <section class="sec dark scale" id="scale" aria-label="Where the models run">
+    <div class="wrap scale__in">
+      <div class="scale__text" data-in>
         <h2 class="h2">Live today in <span class="mute">five markets.</span></h2>
-        <p class="scale__count" role="img" aria-label="More than 250 AI/ML models in production across Singapore, Hong Kong, Taiwan, India and Indonesia">
-          <span class="scale__num" id="modelCount" aria-hidden="true">250+</span>
-          <span class="scale__unit" aria-hidden="true">models in production</span>
-        </p>
+        <p class="scale__figure"><span class="scale__num">250+</span><span class="scale__unit">AI/ML models in production</span></p>
+        <ul class="markets">
+          <li>Singapore</li><li>Hong Kong</li><li>Taiwan</li><li>India</li><li>Indonesia</li>
+        </ul>
       </div>
-      <canvas id="modelField" class="scale__canvas" aria-hidden="true"></canvas>
-     </div>
+      <canvas id="modelField" class="scale__canvas" role="img" aria-label="Map of Asia with the five markets lit: Singapore, Hong Kong, Taiwan, India and Indonesia" data-in></canvas>
     </div>
   </section>
 
