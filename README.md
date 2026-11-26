@@ -10,10 +10,10 @@ Dependency-free static site: semantic HTML, hand-written CSS, vanilla JavaScript
 
 A calm, product-page system for both phone and desktop:
 
-- A floating glass navigation pill, then a full-bleed hero: a pre-rendered light-streak image (`assets/img/hero-beams.webp`, 31 KB, not video and not a live canvas), a badge, a bold headline with one gradient phrase, glass buttons and a key-figures row
+- A floating glass navigation pill, then a quiet, typographic hero: the headline on the left and the portrait (a transparent cutout, `assets/img/richard-cutout.webp`) standing directly on the black page at the right, flush to the bottom edge; on phones the portrait comes first. The AI-themed neural lattice (`assets/img/contact-neural.webp`, a static render, not video and not a live canvas) is a soft glow in the closing section
 - Near-black surfaces with translucent glass cards; fluid type and layout from 320px phones to wide desktops
-- An "Embedded in the business" four-step approach, a five-industries section (finance, oil and gas, telecommunication, motorsport and transport, education), "How I work" cards, outcome-led career cards, honours ledger, research cards, discipline tabs
-- One signature piece: a dot-matrix map of Asia (`assets/js/models.js`) pinned for a few screens, where the five markets light up and the counter climbs to 250+. It draws only when the scroll position changes; nothing runs while it is still
+- An "Embedded in the business" four-step approach, a five-industries section (finance, oil and gas, telecommunication, motorsport and transport, education), outcome-led career cards, honours ledger, research cards, discipline tabs
+- One signature piece: a still dot-matrix map of Asia (`assets/js/models.js`) with the five markets lit and linked, drawn once with no scroll handler, no loop and no counting
 - No background animation, no WebGL, no per-frame work: scrolling is handled by the browser alone. Scroll-linked effects (title fades out, cards and rows rise as they enter, the approach line draws, portrait drift, closing headline settles) are CSS scroll-driven animations on transform and opacity, so they run on the compositor; browsers without support show everything in its finished state
 - Respects `prefers-reduced-motion`; no horizontal overflow on phones
 
@@ -24,7 +24,7 @@ index.html
 assets/
   css/style.css    # the whole design
   js/site.js       # reveal on entry, discipline tabs, footer year
-  js/models.js     # the market map
+  js/models.js     # the market map, drawn once
 .github/workflows/deploy.yml
 ```
 
