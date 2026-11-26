@@ -20,6 +20,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="preload" href="assets/img/hero-beams.webp" as="image" type="image/webp" />
 <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="assets/css/style.css" />
 <script type="application/ld+json">
@@ -32,7 +33,7 @@
 
 <header class="nav" id="nav">
   <div class="nav__in">
-    <a class="nav__brand" href="#top">Richard Oentaryo</a>
+    <a class="nav__brand" href="#top"><span class="nav__mark" aria-hidden="true">R</span>Richard Oentaryo</a>
     <nav class="nav__links" aria-label="Sections">
       <a href="#impact">Impact</a>
       <a href="#about">About</a>
@@ -40,7 +41,7 @@
       <a href="#research">Research</a>
       <a href="#craft">Expertise</a>
     </nav>
-    <a class="nav__cta" href="#contact">Contact</a>
+    <a class="nav__cta" href="#contact">Contact <span aria-hidden="true">&#8599;</span></a>
   </div>
 </header>
 
@@ -48,15 +49,18 @@
 
   <!-- HERO -->
   <section class="hero dark">
+    <div class="hero__bg" aria-hidden="true"><img src="assets/img/hero-beams.webp" alt="" width="1920" height="1080" fetchpriority="high" decoding="async" /></div>
     <div class="wrap hero__in">
-      <p class="eyebrow rise" style="--d:.05s">Head of AI/ML Solutions, DBS Bank &middot; Singapore</p>
-      <h1 class="hero__name rise" style="--d:.12s">Richard Oentaryo</h1>
-      <p class="hero__sub rise" style="--d:.2s">Taking frontier AI from research into production, next to the business.</p>
-      <div class="actions rise" style="--d:.3s">
-        <a class="btn btn--primary" href="#contact">Say hello</a>
-        <a class="link" href="assets/files/Richard-Oentaryo-CV.pdf" download>Download CV</a>
+      <div class="hero__main">
+        <p class="badge rise" style="--d:.05s"><i aria-hidden="true"></i>Richard Oentaryo, Ph.D. &middot; Head of AI/ML Solutions, DBS Bank</p>
+        <h1 class="hero__title rise" style="--d:.12s">AI research, taken into <span class="grad">production.</span></h1>
+        <p class="hero__sub rise" style="--d:.2s">I work next to the business to turn frontier AI into live systems across five markets.</p>
+        <div class="actions rise" style="--d:.3s">
+          <a class="btn btn--primary" href="#contact">Say hello <span aria-hidden="true">&rarr;</span></a>
+          <a class="btn btn--ghost" href="assets/files/Richard-Oentaryo-CV.pdf" download>Download CV</a>
+        </div>
+        <p class="hero__prev rise" style="--d:.36s">Previously QuantumBlack, AI by McKinsey &middot; McLaren Applied &middot; SMU</p>
       </div>
-      <p class="hero__prev rise" style="--d:.36s">Previously QuantumBlack, AI by McKinsey &middot; McLaren Applied &middot; SMU</p>
       <dl class="figures rise" style="--d:.45s">
         <div><dd>20</dd><dt>Years in applied AI</dt></div>
         <div><dd>250+</dd><dt>Models in production</dt></div>
@@ -273,11 +277,11 @@
   <!-- CONTACT -->
   <section class="sec dark contact" id="contact">
     <div class="wrap contact__in">
-      <h2 class="h2 h2--xl" data-in>Let&rsquo;s talk.</h2>
+      <h2 class="h2 h2--xl" data-in>Let&rsquo;s <span class="grad">talk.</span></h2>
       <p class="sub" data-in>If you have a hard problem where AI has to work in production, I would like to hear it.</p>
       <div class="actions" data-in>
-        <a class="btn btn--primary" href="https://sg.linkedin.com/in/oentaryo" target="_blank" rel="noopener">Say hello on LinkedIn</a>
-        <a class="link" href="assets/files/Richard-Oentaryo-CV.pdf" download>Download CV <small>PDF, 65 KB</small></a>
+        <a class="btn btn--primary" href="https://sg.linkedin.com/in/oentaryo" target="_blank" rel="noopener">Say hello on LinkedIn <span aria-hidden="true">&rarr;</span></a>
+        <a class="btn btn--ghost" href="assets/files/Richard-Oentaryo-CV.pdf" download>Download CV <small>PDF, 65 KB</small></a>
       </div>
       <p class="contact__links" data-in><a href="https://github.com/oentaryorj" target="_blank" rel="noopener">GitHub</a><a href="https://scholar.google.com/citations?user=OJErfI0AAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a><a href="https://www.researchgate.net/profile/Richard-Oentaryo-2" target="_blank" rel="noopener">ResearchGate</a></p>
     </div>
