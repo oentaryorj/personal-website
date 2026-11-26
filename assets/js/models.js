@@ -147,7 +147,7 @@
     // fit the map, leaving room on the right for labels and at the bottom for the legend
     const padR = Math.max(W * 0.12, 70), legend = 34, pad = 8;
     S = Math.min((W - padR - pad) / MAP_W, (H - legend - pad * 2) / MAP_H);
-    ox = pad; oy = pad + Math.max(0, (H - legend - pad * 2 - MAP_H * S) / 2);
+    ox = Math.max(pad, (W - MAP_W * S - 70) / 2); oy = pad + Math.max(0, (H - legend - pad * 2 - MAP_H * S) / 2);
 
     // every land dot, with everything that does not change per frame worked out here
     dots = [];
