@@ -105,9 +105,9 @@
     { name: "Hong Kong", ll: [114.17, 22.32], dx: 4, dy: 5, align: "left" },
     { name: "Taiwan", ll: [121.0, 23.7], dx: 4, dy: -2, align: "left" },
     { name: "India", ll: [78.5, 22.5], dx: 0, dy: -11, align: "center" },
-    { name: "Indonesia", ll: [106.85, -6.2], dx: -4, dy: 3, align: "right" }   // marker on Jakarta; the whole country lights up
+    { name: "Indonesia", ll: [106.85, -6.2], dx: -4, dy: 3, align: "right", prior: true }   // marker on Jakarta; the whole country lights up
   ];
-  const LINKS = [[3, 0], [0, 1], [1, 2], [3, 1], [0, 4]];        // India-Singapore, Singapore-Hong Kong, Hong Kong-Taiwan, India-Hong Kong, Singapore-Indonesia
+  const LINKS = [[3, 0], [0, 1], [1, 2], [3, 1]];                 // between the four live markets        // India-Singapore, Singapore-Hong Kong, Hong Kong-Taiwan, India-Hong Kong, Singapore-Indonesia
 
   let W = 1, H = 1, accent = "#7aa8ff", soft = "#a3a6b4", glow = "#d6e4f4", canvasBg = "#05050a";
   let ox = 0, oy = 0, S = 1;
@@ -150,19 +150,19 @@
         if (g === 0 || g === 4 || g === 5) continue;            // sea; the two city markers are drawn below
         const edge = Math.min(smooth(0, 9, rr), smooth(0, 7, c), smooth(0, 7, COLS - 1 - c));   // cropped edges dissolve
         if (edge <= 0.02) continue;
-        const lit = g === 2 || g === 3 || g === 6;              // India, Taiwan, Indonesia light up as regions
-        const a = (lit ? 0.85 : 0.26) * edge;
-        const key = (lit ? STEPS + 1 : 0) + Math.round(a * STEPS);
+        const cls = g === 2 || g === 3 ? 1 : g === 6 ? 2 : 0;    // India and Taiwan are live; Indonesia is earlier work
+        const a = (cls === 1 ? 0.85 : cls === 2 ? 0.42 : 0.26) * edge;
+        const key = cls * (STEPS + 1) + Math.round(a * STEPS);
         let path = buckets.get(key);
         if (!path) { path = new Path2D(); buckets.set(key, path); }
-        const [x, y] = px(c, rr), r2 = lit ? rad * 1.2 : rad;
+        const [x, y] = px(c, rr), r2 = cls ? rad * 1.2 : rad;
         path.moveTo(x + r2, y); path.arc(x, y, r2, 0, 6.2832);
       }
     }
     for (const [key, path] of buckets) {
-      const lit = key > STEPS;
-      ctx.globalAlpha = (lit ? key - STEPS - 1 : key) / STEPS;
-      ctx.fillStyle = lit ? accent : soft;
+      const cls = Math.floor(key / (STEPS + 1));
+      ctx.globalAlpha = (key - cls * (STEPS + 1)) / STEPS;
+      ctx.fillStyle = cls === 1 ? accent : cls === 2 ? glow : soft;
       ctx.fill(path);
     }
     ctx.globalAlpha = 1;
@@ -181,9 +181,14 @@
     const fs = Math.max(11, Math.min(15, W * 0.021));
     MARKETS.forEach((m, i) => {
       const [x, y] = pts[i];
-      ctx.globalAlpha = 0.2; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rad * 4.4, 0, 6.2832); ctx.fill();
-      ctx.globalAlpha = 1; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rad * 2.1, 0, 6.2832); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, rad * 0.9, 0, 6.2832); ctx.fill();
+      if (m.prior) {                                              // earlier work: a quiet hollow ring, not a live marker
+        ctx.globalAlpha = 0.85; ctx.strokeStyle = glow; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.arc(x, y, rad * 2.6, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]);
+      } else {
+        ctx.globalAlpha = 0.2; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rad * 4.4, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x, y, rad * 2.1, 0, 6.2832); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, rad * 0.9, 0, 6.2832); ctx.fill();
+      }
       const lx = x + m.dx * MAP.xs * S, ly = y + m.dy * S;
       ctx.globalAlpha = 0.5; ctx.strokeStyle = accent; ctx.lineWidth = 1;     // leader line
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(m.align === "center" ? lx : lx - (m.align === "left" ? 3 : -3), ly); ctx.stroke();
