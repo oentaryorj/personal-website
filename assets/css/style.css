@@ -127,10 +127,17 @@ a { color: inherit; text-decoration: none; }
   .badge { font-size: .75rem; }
 }
 
-/* ------------------------------------------------------------- statement -- */
-.statement__pin { display: grid; align-content: center; min-height: 80svh; padding-block: 4rem; }
-.statement__line { font-size: clamp(2.2rem, 1rem + 6.2vw, 5.75rem); font-weight: 600; line-height: 1.04; letter-spacing: -0.04em; text-wrap: balance; max-width: 16ch; }
-.statement__line + .statement__line { margin-top: clamp(1.25rem, 4.5vh, 2.75rem); }
+/* ---------------------------------------------------------- forward deployed -- */
+.steps { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(.75rem, 1.4vw, 1.1rem); margin-top: clamp(2.5rem, 5vw, 3.75rem); padding-top: 2rem; }
+.steps::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; border-radius: 2px; background: var(--grad); transform-origin: 0 50%; }
+.step { display: flex; flex-direction: column; padding: clamp(1.25rem, 2vw, 1.6rem); }
+.step h3 { font-size: clamp(1.15rem, .8rem + .8vw, 1.45rem); }
+.step .proof { margin-top: auto !important; padding-top: 1.1rem; border-top: 1px solid var(--hair); font-size: .875rem !important; line-height: 1.4; color: var(--soft); max-width: none !important; }
+.step p:not(.proof) { margin-bottom: 1.25rem; }
+.step .proof b { color: var(--ink); font-weight: 600; }
+.embedded__note { margin-top: clamp(1.5rem, 3vw, 2.25rem); max-width: 44rem; font-size: 1rem; color: var(--soft); }
+@media (max-width: 1100px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .steps { grid-template-columns: 1fr; padding-top: 0; } .steps::before { display: none; } }
 
 /* ------------------------------------------------------------- industries -- */
 .industries { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(.75rem, 1.4vw, 1.1rem); margin-top: clamp(2rem, 5vw, 3.5rem); }
@@ -276,14 +283,9 @@ html:not(.reveal) .index__panels [role="tabpanel"] + [role="tabpanel"] { margin-
     .hero__main { animation: hero-out linear both; animation-timeline: view(); animation-range: exit 0% exit 90%; }
     @keyframes hero-out { to { opacity: 0; transform: translate3d(0, -5vh, 0) scale(.96); } }
 
-    /* statement: the section pins, and the three lines light up one after another as you scroll through it */
-    .statement { height: 260svh; view-timeline: --stm block; }
-    .statement__pin { position: sticky; top: 0; height: 100svh; min-height: 0; padding-block: 0; }
-    .statement__line { animation: line-on linear both; animation-timeline: --stm; }
-    .statement__line:nth-child(1) { animation-range: contain 0% contain 26%; }
-    .statement__line:nth-child(2) { animation-range: contain 24% contain 52%; }
-    .statement__line:nth-child(3) { animation-range: contain 50% contain 78%; }
-    @keyframes line-on { from { opacity: .16; transform: translate3d(0, 4vh, 0); } to { opacity: 1; transform: none; } }
+    /* the line above the four steps draws itself as the section scrolls in */
+    .steps::before { animation: draw linear both; animation-timeline: view(); animation-range: entry 10% cover 40%; }
+    @keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
     /* cards, ledger rows and headings rise and settle as they enter, each on its own timeline */
     .sd [data-stagger] > *, .sd [data-in]:not([data-stagger]):not(.h2--xl) { animation: enter linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
