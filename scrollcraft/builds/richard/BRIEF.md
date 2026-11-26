@@ -87,3 +87,26 @@ Owner asked for a premium editorial CV that does not look machine-made, position
 
 ## Revision 13: a calmer entrance for senior readers
 Owner asked for a better entrance for senior readers. The gauges, radar, leader lines, edge rulers, pointer reticle, scan line and portrait scan were removed (shader code included); the globe gate and the fly-through stay. Hero role and figure labels are larger, and a Download CV button sits beside Say hello so the CV is one click from the first screen.
+
+## Revision 14: employer-first structure
+Owner asked for a radical improvement aimed at top employers. The world (globe gate, corridor, Asia map peak, cool palette) was kept because the owner steered it across 13 revisions; the change is to what a hiring manager meets and how fast.
+- Hero: one line of prior employers under the role (QuantumBlack, McLaren Applied, SMU), so credibility lands in the first screen.
+- Persistent action: the running head now carries CV and Say hello on every chapter.
+- "Selected results" (which repeated the hero figures) became "How I work": four positioning principles, each backed by a real figure from the site. No new facts.
+- Career rail: each station now leads with its result (Gold Medal, 12 papers, Days to hours, 30% lower defaults, 250+ models) above the employer, so a skim reads as an outcome story. Duplicate facts removed.
+- Close: a primary "Say hello on LinkedIn" button beside Download CV, replacing an inline link.
+- schema.org Person data for search and recruiter tooling.
+Verified in headless Chrome (software GL) at 1440x900 and 390x844, no horizontal overflow; not on a real phone.
+
+## Revision 15: responsiveness
+Owner reported the background janky on a laptop Chrome and the map slow.
+- Background field: drawn at 0.6 of CSS pixels (0.5 on compact screens), never above 1 device pixel per CSS pixel (was up to 1.25 x 0.8, so about full retina resolution). Behind reading text it renders at 30fps while scrolling and 15fps otherwise; full rate only on the title, interlude and close. Adaptive resolution now backs off within about a third of a second (floor 0.32) instead of after 40 slow frames.
+- Asia map: no idle loop and no ambient animation (sweep, travelling packets and pulse rings removed). It draws only when the scroll position changes, with a 150ms ease; dots are batched into a dozen fills and the settled land is a cached image; section geometry is measured on resize, not per scroll event. Chapter scroll length cut from 6.4 to 4.6 screens.
+- Career route, research net and orbit canvases: 30fps, device pixel ratio capped at 1.5.
+Measured in headless Chrome with software GL (hero scroll 31 to 60 fps page-wide); not measured on a real laptop GPU.
+
+## Revision 16: less empty space on desktop
+Content column widened (82rem to 98rem) with clearance kept for the chapter ticks; section padding roughly halved; interlude cut from a full screen to 62%; career cards enlarged and centred in their stage; the model chapter gives the map 8 of 12 columns; recognition gains a derived "9 honours since 2004" figure; the skills chapter's gap closed. Page height at 1440x900 dropped from 22.5 to 18.9 screens. Desktop only; phone layout untouched.
+
+## Revision 17: 60fps target
+The 30fps cap behind reading text is gone: the field now runs at the display rate whenever the page is scrolling, the pointer is moving or the scene is the star, and resolution (not frame rate) gives way: a frame over 19ms counts as slow, and 5 of them cut the pixels by 18% (floor 0.32). Only a page left still eases to 30fps, then 12fps. Ambient canvases are back to full rate. Add ?fps to the address to show the real frame rate, field scale and resolution on any machine. Measured only on software GL (58fps at the floor scale); not on a real laptop GPU.

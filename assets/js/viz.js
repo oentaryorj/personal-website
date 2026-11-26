@@ -29,7 +29,7 @@
     const paint = (now = 0) => { ctx.clearRect(0, 0, w, h); if (w > 2 && h > 2) draw(ctx, w, h, now / 1000); };
     const loop = now => { raf = 0; if (!on) return; paint(now); raf = requestAnimationFrame(loop); };
     const size = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       w = canvas.clientWidth; h = canvas.clientHeight;
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
