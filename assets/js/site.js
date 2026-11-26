@@ -9,6 +9,10 @@
 
   // Hidden only once this script is running, so a failure leaves the content visible.
   root.classList.add("reveal");
+  // Where the browser can run scroll-driven animations, entries are declared in CSS and need no observer.
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sd = !reduceMotion && window.CSS && CSS.supports("animation-timeline: view()");
+  if (sd) root.classList.add("sd");
   const seen = new IntersectionObserver((entries, io) => {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
@@ -16,11 +20,11 @@
       e.target.classList.add("in");
     }
   }, { rootMargin: "0px 0px -8% 0px", threshold: 0.01 });
-  $$("[data-stagger]").forEach(parent => {
+  if (!sd) $$("[data-stagger]").forEach(parent => {
     const step = Number(parent.dataset.stagger) || 60;
     [...parent.children].forEach((child, i) => { child.style.transitionDelay = `${Math.min(i, 5) * step}ms`; seen.observe(child); });
   });
-  $$("[data-in]").forEach(el => { if (!el.hasAttribute("data-stagger")) seen.observe(el); else el.classList.add("in"); });
+  if (!sd) $$("[data-in]").forEach(el => { if (!el.hasAttribute("data-stagger")) seen.observe(el); else el.classList.add("in"); });
 
   // discipline tabs
   const tabRoot = $("#craftIndex");
